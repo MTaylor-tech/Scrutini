@@ -1,25 +1,17 @@
-# Write your code here :-)
-from PyQt5 import QtWidgets, QtGui, QtCore
-import os
-import sqlite3
+"""Scrutini Main"""
 import argparse
-import scrudb
-from scruclasses import *
+from db import SCDatabase
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
-
-
-conn = None
 
 # initiate the parser
 parser = argparse.ArgumentParser()
 parser.add_argument("-i0", "--interface0",
                     help="Use command-line interface (0)", action="store_true")
 parser.add_argument("-i1", "--interface1",
-                    help="Use Graphical User Interface (1)", action="store_true")
-
+                    help="Use Graphical User Interface (1)",
+                    action="store_true")
 # read arguments from the command line
 args = parser.parse_args()
-
 # check for --interface0 or -i0
 if args.interface0:
     interface = 0
@@ -27,16 +19,25 @@ if args.interface0:
     print("Command-Line Interface (0)")
 else:
     interface = 1
-    import scruinterface1 as scruinterface
+    import gui
     print("GUI (1)")
-
 
 if __name__ == "__main__":
     appctxt = ApplicationContext()
     import sys
-    scrudb.check_db()
-
-    scruinterface.print_settings()
-    scruinterface.menu_main()
+    db_filename = 'scrutini.db'
+    schema_filename = 'scrutinischema.sql'
+    app_version = 0.01
+    schema_version = 0.01
+    scrudb = SCDatabase(db_filename, schema_filename, app_version,
+                        schema_version)
+    scrudb.check()
+    if interface == 0:
+        scruinterface.print_settings()
+        scruinterface.menu_main()
+    else:
+        gui = gui.Interface(scrudb)
+        gui.settings()
+        gui.menu_main()
     scrudb.close_connection()
     sys.exit(appctxt.app.exec_())

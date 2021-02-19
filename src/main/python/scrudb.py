@@ -20,9 +20,10 @@ def retrieve_settings(whichSettings='current'):
     cursor = conn.cursor()
     cursor.execute(
         'SELECT * FROM settings WHERE name = \"%s\"' % whichSettings)
-    row = cursor.fetchone()
-    settings = Settings(*row)
-    return settings
+    return Settings(*cursor.fetchone())
+    # row = cursor.fetchone()
+    # settings = Settings(*row)
+    # return settings
 
 def close_connection():
     """Close the DB connection"""
@@ -32,7 +33,7 @@ def close_connection():
 def return_connection():
     """Return a link to the active DB connection or opens a new one"""
     global dbconn
-    if dbconn != None:
+    if dbconn is not None:
         return dbconn
     else:
         print("Connecting to DB...")
@@ -47,7 +48,7 @@ def retrieve_competitionTypes():
         'select * from competitionTypes')
     competitionTypes = cursor.fetchall()
     competitionTypes_collection = []
-    if (competitionTypes != None):
+    if competitionTypes is not None:
         for row in competitionTypes:
             compType = CompetitionType(*row)
             competitionTypes_collection.append(compType)
@@ -72,7 +73,7 @@ def retrieve_categories():
     cursor.execute('select * from dancerCats')
     categories = cursor.fetchall()
     dancerCat_collection = []
-    if (categories != None):
+    if categories is not None:
         for row in categories:
             category = DancerCat(*row)
             dancerCat_collection.append(category)
@@ -118,7 +119,7 @@ def retrieve_competitions():
         'select * from competitions')
     competitions_collection = []
     competitions = cursor.fetchall()
-    if (competitions != None):
+    if competitions is not None:
         for row in competitions:
             comp = Competition(*row)
             competitions_collection.append(comp)
@@ -179,7 +180,7 @@ def retrieve_judges_by_competition(comp_id):
     cursor.execute(sql)
     judges = cursor.fetchall()
     judges_collection = []
-    if (judges != None):
+    if judges is not None:
         for row in judges:
             judge = Judge(*row)
             judges_collection.append(judge)
@@ -197,29 +198,27 @@ def retrieve_judge(id):
     judge = Judge(*row)
     return judge
 
-
 def update_dancerGroup(dancerGroup):
+    """Save a DancerGroup"""
     conn = return_connection()
     cursor = conn.cursor()
-    sql2 = ('update dancerGroups set name = \"%s\", abbrev = \"%s\", ageMin = %d, ageMax = %d, dancerCat = %d, competition = %d where id =%d' % (
+    sql = ('update dancerGroups set name = \"%s\", abbrev = \"%s\", ageMin = %d, ageMax = %d, dancerCat = %d, competition = %d where id =%d' % (
         dancerGroup.name, dancerGroup.abbrev, dancerGroup.ageMin, dancerGroup.ageMax, dancerGroup.dancerCat, dancerGroup.competition, dancerGroup.id))
-    cursor.execute(sql2)
+    cursor.execute(sql)
     conn.commit()
     return dancerGroup
 
-
 def insert_dancerGroup(dancerGroup):
-    # Add a new DancerGroup object to the DB
+    """Create a new DancerGroup"""
     conn = return_connection()
     cursor = conn.cursor()
-    sql = 'insert into dancerGroups default values'
+    sql = f"insert into dancerGroups (name,abbrev,ageMin,ageMax,dancerCat,competition) values ('{dancerGroup.name}','{dancerGroup.abbrev}',{dancerGroup.ageMin},{dancerGroup.ageMax},{dancerGroup.dancerCat},{dancerGroup.competition})"
     cursor.execute(sql)
     dancerGroup.id = cursor.lastrowid
-    dancerGroup = update_dancerGroup(dancerGroup)
     return dancerGroup
 
-
 def rm_dancerGroupJoin_by_dancer_and_dancerGroup(dancer_id, dancerGroup_id):
+    """Remove the connection between Dancer and DancerGroup"""
     conn = return_connection()
     cursor = conn.cursor()
     sql = ('delete from dancerGroupJoin where (dancer = %d and dancerGroup = %d)' % (
@@ -227,16 +226,16 @@ def rm_dancerGroupJoin_by_dancer_and_dancerGroup(dancer_id, dancerGroup_id):
     cursor.execute(sql)
     conn.commit()
 
-
 def rm_dancerGroupJoin_by_dancer(dancer_id):
+    """Remove all DancerGroups from a Dancer"""
     conn = return_connection()
     cursor = conn.cursor()
     sql = ('delete from dancerGroupJoin where dancer = %d' % int(dancer_id))
     cursor.execute(sql)
     conn.commit()
 
-
 def rm_dancerGroupJoin_by_dancerGroup(dancerGroup_id):
+    """Remove all Dancers from a DancerGroup"""
     conn = return_connection()
     cursor = conn.cursor()
     sql = ('delete from dancerGroupJoin where dancerGroup = %d' %
@@ -244,134 +243,119 @@ def rm_dancerGroupJoin_by_dancerGroup(dancerGroup_id):
     cursor.execute(sql)
     conn.commit()
 
-
 def rm_dancerGroup(id):
+    """Delete a DancerGroup specified by id"""
     conn = return_connection()
     cursor = conn.cursor()
     sql = ('delete from dancerGroups where id = %d' % int(id))
     cursor.execute(sql)
+    # Now disconnect this DG from any dancers:
     rm_dancerGroupJoin_by_dancerGroup(id)
     conn.commit()
 
-
 def rm_dancerGroups_by_competition(comp_id):
+    """Delete all DancerGroups in a Competition"""
     dancerGroups = retrieve_dancerGroups_by_competition(comp_id)
     for dancerGroup in dancerGroups:
         rm_dancerGroup(dancerGroup.id)
 
-
 def retrieve_dancerGroups_by_competition(comp_id):
+    """Return a list of all DancerGroups in a Competition"""
     conn = return_connection()
     cursor = conn.cursor()
-    sql = ('select id, name, abbrev, ageMin, ageMax, dancerCat, competition from dancerGroups where competition = %d' % int(comp_id))
+    sql = ('select * from dancerGroups where competition = %d' % int(comp_id))
     cursor.execute(sql)
     dancerGroups = cursor.fetchall()
     dancerGroups_collection = []
-    if (dancerGroups != None):
+    if dancerGroups is not None:
         for row in dancerGroups:
-            dancerGroup = DancerGroup(
-                row[0], row[1], row[2], row[3], row[4], row[5], row[6])
+            dancerGroup = DancerGroup(*row)
             dancerGroups_collection.append(dancerGroup)
         return dancerGroups_collection
     else:
         return None
 
-
 def retrieve_dancerGroup(id):
+    """Return a single DancerGroup specified by id"""
     conn = return_connection()
     cursor = conn.cursor()
-    sql = ('select id, name, abbrev, ageMin, ageMax, dancerCat, competition from dancerGroups where id = %d' % int(id))
+    sql = ('select * from dancerGroups where id = %d' % int(id))
     cursor.execute(sql)
     row = cursor.fetchone()
-    if (row != None):
-        dancerGroup = DancerGroup(
-            row[0], row[1], row[2], row[3], row[4], row[5], row[6])
+    if row is not None:
+        return DancerGroup(*row)
     else:
-        dancerGroup = None
-    return dancerGroup
-
+        return None
 
 def retrieve_dancerGroup_by_abbrev(abbrev):
+    """Return a single DancerGroup specified by abbrev"""
     conn = return_connection()
     cursor = conn.cursor()
-    sql = ('select id, name, abbrev, ageMin, ageMax, dancerCat, competition from dancerGroups where abbrev = \"%s\"' % abbrev)
+    sql = ('select * from dancerGroups where abbrev = \"%s\"' % abbrev)
     cursor.execute(sql)
     row = cursor.fetchone()
-    dancerGroup = None
-    if(row != None):
-        dancerGroup = DancerGroup(
-            row[0], row[1], row[2], row[3], row[4], row[5], row[6])
-    return dancerGroup
-
+    if row is not None:
+        return DancerGroup(*row)
+    else:
+        return None
 
 def retrieve_dancerGroups_by_dancer(dancer_id):
+    """Return a list of all DancerGroups a Dancer is in"""
     conn = return_connection()
     cursor = conn.cursor()
     sql = ('select dancer, dancerGroup from dancerGroupJoin where dancer = %d' % dancer_id)
     cursor.execute(sql)
     dancerGroups = cursor.fetchall()
     dancerGroups_collection = []
-    if (dancerGroups != None):
-        #print('retrieve_dancerGroups_by_dancer: if (dancerGroups != None): %s' % dancerGroups)
+    if dancerGroups is not None:
         if (len(dancerGroups) > 0):
             for row in dancerGroups:
-                if (row != None):
+                if row is not None:
                     dancerGroup = retrieve_dancerGroup(row[1])
                     dancerGroups_collection.append(dancerGroup)
         return dancerGroups_collection
     else:
-        #print('retrieve_dancerGroups_by_dancer: else')
         return None
 
 
 def create_connection(db_file):
-    # create a database connection to the SQLite database specified by db_file
-    # param db_file: database filename
-    # return: Connection object or None
+    """Create a database connection to the SQLite database specified by db_file"""
     conn = None
     try:
         conn = sqlite3.connect(db_file)
     except Error as e:
         print(e)
-
     return conn
 
-
 def create_schema():
-    # Loads the schema from scratch
+    """Load the schema into the DB"""
     conn = return_connection()
-    print('Creating schema')
+    print('Setting up database')
     with open(schema_filename, 'rt') as f:
         schema = f.read()
     conn.executescript(schema)
     conn.commit()
 
-
 def new_settings(settings):
-    # Set a new settings set
-    # param: settings (type Settings)
+    """Create a new type of Settings"""
     conn = return_connection()
     sql = ('INSERT INTO settings(name, version, schema, interface, lastComp, orderPlaces) VALUES(\"%s\",%f,%f,%d,%d,%d)' % (
         settings.name, settings.version, settings.schema, settings.interface, settings.lastComp, settings.orderOfPlacings))
-    #sql = ('update settings set name = \"%s\", version = %f, schema = %f, interface = %d, lastComp = %d where name = \"%s\"' % (settings.name, settings.version, settings.schema, settings.interface, settings.lastComp, settings.name))
     cur = conn.cursor()
     cur.execute(sql)
     conn.commit()
 
-
 def set_settings(settings):
-    # Set the settings
-    # param: settings (type Settings)
+    """Save Settings"""
     conn = return_connection()
-    #sql = ('INSERT INTO settings(name, version, schema, interface, lastComp) VALUES(\"%s\",%f,%f,%d,%d)' % (settings.name, settings.version, settings.schema, settings.interface, settings.lastComp))
     sql = ('update settings set name = \"%s\", version = %f, schema = %f, interface = %d, lastComp = %d, orderPlaces=%d where name = \"%s\"' % (
         settings.name, settings.version, settings.schema, settings.interface, settings.lastComp, settings.orderOfPlacings, settings.name))
     cur = conn.cursor()
     cur.execute(sql)
     conn.commit()
 
-
 def update_dancer(dancer):
+    """Save a Dancer"""
     conn = return_connection()
     cursor = conn.cursor()
     sql = ('update dancers set firstName = \"%s\", lastName = \"%s\", scotDanceNum = \"%s\", street  = \"%s\", city = \"%s\", state = \"%s\", zip = \"%s\", birthdate = \"%s\", age = %d, registeredDate = \"%s\", number = \"%s\", phonenum = \"%s\", email = \"%s\", teacher = \"%s\", teacherEmail = \"%s\", dancerCat = %d, dancerGroup = %d, competition = %d where id = %d' % (
@@ -380,22 +364,22 @@ def update_dancer(dancer):
     conn.commit()
     return dancer
 
-
 def insert_dancer(dancer):
+    """Create a new Dancer"""
     conn = return_connection()
-    sql = ('insert into dancers default values')
+    sql = ('insert into dancers (firstName,lastName,scotDanceNum,street,city,state,zip,birthdate,age,registeredDate,number,phonenum,email,teacher,teacherEmail,dancerCat,dancerGroup,competition) values (\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%d,%d,%d)' % (
+        dancer.firstName, dancer.lastName, dancer.scotDanceNum, dancer.street, dancer.city, dancer.state, dancer.zipCode, dancer.birthdate, dancer.age, dancer.registeredDate, dancer.number, dancer.phonenum, dancer.email, dancer.teacher, dancer.teacherEmail, dancer.dancerCat, dancer.dancerGroup, dancer.competition))
     cur = conn.cursor()
     cur.execute(sql)
     dancer.id = cur.lastrowid
-    dancer = update_dancer(dancer)
     return dancer
 
-
 def find_dancer_number(dancer):
+    """Return the Dancer number"""
     return dancer.number
 
-
 def retrieve_dancers_by_dancerGroup_ordered_by_number(dancerGroup_id):
+    """Return all Dancers in a DancerGroup, sorted by Dancer number"""
     conn = return_connection()
     cursor = conn.cursor()
     sql = ('select dancer, dancerGroup from dancerGroupJoin where dancerGroup = %d' %
@@ -406,21 +390,17 @@ def retrieve_dancers_by_dancerGroup_ordered_by_number(dancerGroup_id):
     dancers = list(filter(None, dancers))
     for row in dancers:
         dancer = retrieve_dancer(row[0])
-        # print(row)
-        # if dancer != None:
-        #    print('%d - %s' % (dancer.id, dancer.number))
-        # print(retrieve_dancer(row[0]))
         dancers_collection.append(dancer)
     dancers_collection = list(filter(None, dancers_collection))
-    if (dancers_collection != None):
+    if dancers_collection is not None:
         try:
             dancers_collection.sort(key=find_dancer_number)
         except:
             return None
     return dancers_collection
 
-
 def retrieve_dancers_by_dancerGroup(dancerGroup_id):
+    """Return all Dancers in a DancerGroup"""
     conn = return_connection()
     cursor = conn.cursor()
     sql = ('select dancer, dancerGroup from dancerGroupJoin where dancerGroup = %d' %
@@ -430,49 +410,46 @@ def retrieve_dancers_by_dancerGroup(dancerGroup_id):
     dancers_collection = []
     dancers = list(filter(None, dancers))
     for row in dancers:
-        if (row != None):
+        if row is not None:
             dancer = retrieve_dancer(row[0])
             dancers_collection.append(dancer)
     dancers_collection = list(filter(None, dancers_collection))
     return dancers_collection
 
-
 def retrieve_dancers_by_competition(comp_id):
+    """Return all Dancers in a Competition"""
     conn = return_connection()
     cursor = conn.cursor()
-    sql = ('select id, firstName, lastName, scotDanceNum, street, city, state, zip, birthdate, age, registeredDate, number, phonenum, email, teacher, teacherEmail, dancerCat, dancerGroup, competition from dancers where competition = %d' % comp_id)
+    sql = ('select * from dancers where competition = %d' % comp_id)
     cursor.execute(sql)
     dancers = cursor.fetchall()
     dancers_collection = []
     for row in dancers:
-        dancer = Dancer(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8],
-                        row[9], row[10], row[11], row[12], row[13], row[14], row[15], row[16], row[17], row[18])
+        dancer = Dancer(*row)
         dancers_collection.append(dancer)
     dancers_collection = list(filter(None, dancers_collection))
     return dancers_collection
 
-
 def retrieve_dancer(id):
+    """Select a single Dancer by id"""
     conn = return_connection()
     cursor = conn.cursor()
-    sql = ('select id, firstName, lastName, scotDanceNum, street, city, state, zip, birthdate, age, registeredDate, number, phonenum, email, teacher, teacherEmail, dancerCat, dancerGroup, competition from dancers where id = %d' % int(id))
+    sql = ('select * from dancers where id = %d' % int(id))
     cursor.execute(sql)
     row = cursor.fetchone()
-    if (row != None):
-        dancer = Dancer(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8],
-                        row[9], row[10], row[11], row[12], row[13], row[14], row[15], row[16], row[17], row[18])
+    if row is not None:
+        dancer = Dancer(*row)
         return dancer
     else:
         return None
 
-
 def rm_dancers_by_competition(comp_id):
+    """Delete all Dancers in a Competition"""
     conn = return_connection()
     cursor = conn.cursor()
     sql = ('delete from dancers where competition = %d' % comp_id)
     cursor.execute(sql)
     conn.commit()
-
 
 def rm_dancer(id):
     conn = return_connection()

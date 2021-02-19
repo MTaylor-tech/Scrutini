@@ -1,4 +1,4 @@
-"""Scrutini Class Definitions."""
+"""Scrutini Class Definitions.2."""
 
 class Settings:
     def __init__(self, name, version, schema, interface, lastComp, orderOfPlacings):

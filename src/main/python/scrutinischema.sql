@@ -1,5 +1,5 @@
 /*  Schema for Scrutini
-    Schema Version 0.01
+    Schema Version 0.02
 */
 
 -- Competition Types include Regular, Championship, and Premiership and defines how scoring is done and number of judges
@@ -152,6 +152,3 @@ create table placingValues (
     place       integer,
     value       integer
 );
-
-
-
