@@ -36,8 +36,9 @@ if __name__ == "__main__":
         scruinterface.print_settings()
         scruinterface.menu_main()
     else:
-        gui = gui.Interface(scrudb)
-        gui.settings()
-        gui.menu_main()
-    scrudb.close_connection()
-    sys.exit(appctxt.app.exec_())
+        g = gui.Interface(scrudb)
+        g.start()
+    rc = appctxt.app.exec_()
+    # del appctxt.app
+    print(f"Exit main {rc}")
+    sys.exit(rc)

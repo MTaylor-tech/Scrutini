@@ -1,6 +1,7 @@
-# Interface 1 (GUI) Instructions
+"""Scrutini GUI"""
+from db import SCDatabase
 import scrudb
-from scruclasses import *
+import classes as sc
 import datetime
 from pathlib import Path
 import os
@@ -8,43 +9,52 @@ import csv
 from PyQt5 import QtWidgets, QtGui, QtCore, QtPrintSupport
 import sys
 from PyQt5.QtWidgets import *
+import PyQt5.QtWidgets as qt
+# QGroupBox, QPushButton, QVBoxLayout
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QPalette
 from fpdf import FPDF
 
-class SPushButton(QPushButton):
-    def __init__(self, text, compSelector, identifier):
+
+class SPushButton(qt.QPushButton):
+    def __init__(self, text, sender, identifier, fn):
         super(SPushButton, self).__init__(text)
         self.identifier = identifier
-        self.compSelector = compSelector
+        self.sender = sender
 
     def on_button_clicked(self):
-        self.compSelector.set_competition(self.identifier)
-        #alert = QMessageBox()
-        #alert.setText(self.identifier)
-        #alert.exec_()
+        self.fn(self.identifier)
+#
+#
+# class SCPushButton(QPushButton):
+#     def __init__(self, text, compSelector, identifier):
+#         super(SPushButton, self).__init__(text)
+#         self.identifier = identifier
+#         self.compSelector = compSelector
+#
+#     def on_button_clicked(self):
+#         self.compSelector.set_competition(self.identifier)
+#
+#
+# class SDGPushButton(QPushButton):
+#     def __init__(self, text, dgSelector, identifier):
+#         super(SDGPushButton, self).__init__(text)
+#         self.identifier = identifier
+#         self.dgSelector = dgSelector
+#
+#     def on_button_clicked(self):
+#         self.dgSelector.set_dancer_group(self.identifier)
 
-class SDGPushButton(QPushButton):
-    def __init__(self, text, dgSelector, identifier):
-        super(SDGPushButton, self).__init__(text)
-        self.identifier = identifier
-        self.dgSelector = dgSelector
 
-    def on_button_clicked(self):
-        self.dgSelector.set_dancer_group(self.identifier)
-        #alert = QMessageBox()
-        #alert.setText(self.identifier)
-        #alert.exec_()
-
-class ResultsGroupBox(QGroupBox):
-    def __init__(self, text, event_id):
+class ResultsGroupBox(qt.QGroupBox):
+    def __init__(self, text, event):
         super(ResultsGroupBox, self).__init__(text)
-        self.event = scrudb.retrieve_event(event_id)
-        self.layout = QVBoxLayout()
-        self.scores = scrudb.retrieve_scores_by_event(self.event.id)
+        self.event = event
+        self.layout = qt.QVBoxLayout()
+        self.scores = event.scores
         self.scores.sort(key=self.get_score_value, reverse=True)
-        #How to calc/show results from multiple judges? xxx
+        # How to calc/show results from multiple judges? xxx
         place = 1
         previous_score = 0
         self.placing_scores = {}
@@ -1191,7 +1201,7 @@ class DancerGroupMenu(QDialog):
         self.dancerGroups = scrudb.retrieve_dancerGroups_by_competition(comp_id)
         self.dgButtons = []
         for dancerGroup in self.dancerGroups:
-            dgButton = SDGPushButton(('[%s] %s' % (dancerGroup.abbrev, dancerGroup.name)),self,dancerGroup.id)
+            dgButton = SPushButton(('[%s] %s' % (dancerGroup.abbrev, dancerGroup.name)),self,dancerGroup.id,self.set_dancer_group)
             dgButton.clicked.connect(dgButton.on_button_clicked)
             self.dgButtons.append(dgButton)
         for dgButton in self.dgButtons:
@@ -1218,24 +1228,24 @@ class DancerGroupMenu(QDialog):
             self.hide()
             self.mainWindow.edit_dancerGroup(dancerGroup_id)
 
-class CompetitionSelector(QDialog):
-    def __init__(self, mainWindow):
+class CompetitionSelector(qt.QDialog):
+    def __init__(self, main_window):
         super(CompetitionSelector, self).__init__()
-        self.mainWindow = mainWindow
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(QLabel('Choose a competition:'))
-        self.competitions = scrudb.retrieve_competitions()
+        self.main_window = main_window
+        self.layout = qt.QVBoxLayout()
+        self.layout.addWidget(qt.QLabel('Choose a competition:'))
+        self.competitions = self.main_window.db.tables.competitions.get_all()
         self.compButtons = []
         for comp in self.competitions:
-            compButton = SPushButton('%s (%s)' % (comp.name, self.get_formatted_date(comp.eventDate)),self,comp.id)
+            compButton = SPushButton('%s (%s)' % (comp.name, self.get_formatted_date(comp.eventDate)),self,comp.id,self.set_competition)
             compButton.clicked.connect(compButton.on_button_clicked)
             self.compButtons.append(compButton)
         for compButton in self.compButtons:
             self.layout.addWidget(compButton)
-        self.newButton = QPushButton('&New Competition')
+        self.newButton = qt.QPushButton('&New Competition')
         self.newButton.clicked.connect(self.new_competition)
         self.layout.addWidget(self.newButton)
-        self.exitButton = QPushButton('Cancel')
+        self.exitButton = qt.QPushButton('Cancel')
         self.exitButton.clicked.connect(self.hide)
         self.layout.addWidget(self.exitButton)
         self.setWindowModality(Qt.ApplicationModal)
@@ -1247,17 +1257,18 @@ class CompetitionSelector(QDialog):
         return (datetime.datetime.strftime(datetime.datetime.strptime(('%s' % date)[0:10], otherformat_str).date(), format_str))
 
     def on_button_clicked(self, identifier):
-        alert = QMessageBox()
+        alert = qt.QMessageBox()
         alert.setText(identifier)
         alert.exec_()
 
     def set_competition(self, comp_id):
-        self.mainWindow.set_competition(comp_id)
+        self.main_window.set_competition(comp_id)
         self.hide()
 
     def new_competition(self):
         self.hide()
         self.mainWindow.new_competition()
+
 
 class JudgeSelector(QDialog):
     def __init__(self, mainWindow, comp_id):
@@ -1426,28 +1437,28 @@ def ask_save(prompt='Do you want to save your changes?', subprompt=''):
         print('Cancel clicked.')
         return 'cancel'
 
-class SMainWindow(QMainWindow):
-    def __init__(self):
-        # Constructor
+class SMainWindow(qt.QMainWindow):
+    def __init__(self, db):
         super(SMainWindow, self).__init__()
-        self.myapp = PyQtApp()
-        self.layout = QVBoxLayout()
+        self.db = db
+        self.app = PyQtApp()
+        self.layout = qt.QVBoxLayout()
         self.label_text = ''
-        self.label = QLabel(self.label_text)
-        self.settings = scrudb.retrieve_settings('current')
+        self.label = qt.QLabel(self.label_text)
+        self.settings = db.tables.settings.get('current')
         self.competition = self.retrieve_competition()
         self.set_competition(self.competition.id)
-        self.button_scrutineer = QPushButton('Enter &Scores')
-        self.button_view_scores = QPushButton('&View/Print Results')
-        self.button_comps = QPushButton('&Change Competition')
-        self.button_comp = QPushButton('&Edit Competition Details')
-        self.button_dancers = QPushButton('&Add/Edit Competitors')
-        self.button_judges = QPushButton('Add/Edit &Judges')
-        self.button_dancerGroups = QPushButton(
+        self.button_scrutineer = qt.QPushButton('Enter &Scores')
+        self.button_view_scores = qt.QPushButton('&View/Print Results')
+        self.button_comps = qt.QPushButton('&Change Competition')
+        self.button_comp = qt.QPushButton('&Edit Competition Details')
+        self.button_dancers = qt.QPushButton('&Add/Edit Competitors')
+        self.button_judges = qt.QPushButton('Add/Edit &Judges')
+        self.button_dancerGroups = qt.QPushButton(
             'Define Competitor &Groups && Dances')
-        self.button_import = QPushButton('&Import CSV')
-        self.button_delete = QPushButton('&Delete Competition')
-        self.button_exit = QPushButton('E&xit')
+        self.button_import = qt.QPushButton('&Import CSV')
+        self.button_delete = qt.QPushButton('&Delete Competition')
+        self.button_exit = qt.QPushButton('E&xit')
         self.button_scrutineer.clicked.connect(self.enter_scores)
         self.button_view_scores.clicked.connect(self.view_scores)
         self.button_comp.clicked.connect(self.edit_competition)
@@ -1458,7 +1469,7 @@ class SMainWindow(QMainWindow):
         self.button_import.clicked.connect(self.import_csv)
         self.button_delete.clicked.connect(self.delete_competition)
         self.button_exit.clicked.connect(self.exit_app)
-        if (self.competition == None):
+        if self.competition is None:
             self.disable_buttons()
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.button_scrutineer)
@@ -1471,30 +1482,28 @@ class SMainWindow(QMainWindow):
         self.layout.addWidget(self.button_import)
         self.layout.addWidget(self.button_delete)
         self.layout.addWidget(self.button_exit)
-        self.myapp.setLayout(self.layout)
+        self.app.setLayout(self.layout)
 
         self.statusBar()
         self.statusBar().show()
-        menubar = QMenuBar(None)
-        #self._menu_bar = QMenuBar()
-        #menubar = self.menuBar()
+        menubar = qt.QMenuBar(None)
         menubar.setNativeMenuBar(False)
         self.setMenuBar(menubar)
 
-        exitAct = QAction(' &Quit',self)
+        exitAct = qt.QAction(' &Quit', self)
         exitAct.setShortcut('Ctrl+Q')
         exitAct.setStatusTip('Exit Application')
         exitAct.triggered.connect(self.exit_app)
 
-        fileMenu = QMenu(' &File')
+        fileMenu = qt.QMenu(' &File')
         menubar.addMenu(fileMenu)
         fileMenu.addAction(exitAct)
 
-        changeCompAct = QAction(' &Select Competition',self)
+        changeCompAct = qt.QAction(' &Select Competition',self)
         changeCompAct.setStatusTip('Choose a different competition or make a new one')
         changeCompAct.triggered.connect(self.select_competition)
 
-        editCompAct = QAction(' &Edit Competition',self)
+        editCompAct = qt.QAction(' &Edit Competition',self)
         editCompAct.setStatusTip('Edit Competition Details')
         editCompAct.triggered.connect(self.edit_competition)
 
@@ -1562,27 +1571,27 @@ class SMainWindow(QMainWindow):
         return (datetime.datetime.strftime(datetime.datetime.strptime(('%s' % date)[0:10], otherformat_str).date(), format_str))
 
     def retrieve_competition(self):
-        competitions = scrudb.retrieve_competitions()
+        competitions = self.db.tables.competitions.get_all()
         competitions_list = []
         for comp in competitions:
             competitions_list.append(comp.id)
-        if (self.settings.lastComp in competitions_list):
+        if self.settings.lastComp in competitions_list:
             self.competition = self.set_competition(
                 self.settings.lastComp)
             return self.competition
         else:
             self.select_competition()
             self.settings.lastComp = self.competition.id
-            scrudb.set_settings(self.settings)
+            self.db.tables.settings.update(self.settings)
             return self.competition
 
     def set_competition(self, comp_id):
-        self.competition = scrudb.retrieve_competition(comp_id)
-        if (self.competition != None):
+        self.competition = self.db.tables.competitions.get(comp_id)
+        if self.competition is not None:
             self.label_text = ('<center>Competition:<br><strong>%s</strong><br>%8s<br>%s</center>' % (self.competition.name, self.get_formatted_date(self.competition.eventDate), self.competition.location))
             self.label.setText(self.label_text)
             self.settings.lastComp = self.competition.id
-            scrudb.set_settings(self.settings)
+            self.db.tables.settings.update(self.settings)
             return self.competition
         else:
             self.label_text = ('<center>No Competition Selected</center>')
@@ -1603,21 +1612,23 @@ class SMainWindow(QMainWindow):
                         'This will delete all data for the given competition. This cannot be undone.')
         if verity:
             #print('Will delete comp %d' % self.competition.id)
-            scrudb.rm_competition(self.competition.id)
+            self.db.tables.competitions.remove(self.competition.id)
             self.competition = None
             self.select_competition()
         else:
             print('Nothing deleted')
 
     def exit_app(self, sender):
-        scrudb.close_connection()
-        sys.exit()
+        self.db.close_connection()
+        print(f"Exit mw {self.app}")
+        self.close()
+        # sys.exit() # (self.app)
 
     def new_competition(self):
         #id, name, description, eventDate, deadline, location, competitionType, isChampionship
         today = datetime.date.today()
-        competition = Competition(0,'','',today,today,'',0,0)
-        self.competition = scrudb.insert_competition(competition)
+        competition = sc.Competition(0,'','',today,today,'',0,0)
+        self.competition = self.db.tables.competitions.insert(competition)
         self.edit_competition()
 
 def is_float(string):
@@ -1762,8 +1773,15 @@ class ImportWindow(QDialog):
         self.hide()
 
 
-def menu_main():
-    app = QApplication(sys.argv)
-    mainWindow = SMainWindow()
-    mainWindow.myapp.show()
-    sys.exit(app.exec_())
+class Interface:
+    def __init__(self, db):
+        self.app = qt.QApplication(sys.argv)
+        self.main_window = SMainWindow(db)
+
+    def start(self):
+        self.main_window.app.show()
+
+    def exit(self):
+        rc = self.app.exec_()
+        print(f"Exit Interface {rc}")
+        sys.exit()
