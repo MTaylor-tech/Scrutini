@@ -27,11 +27,11 @@ if __name__ == "__main__":
     import sys
     db_filename = 'scrutini.db'
     schema_filename = 'scrutinischema.sql'
-    app_version = 0.01
-    schema_version = 0.01
+    app_version = 0.2
+    schema_version = 0.2
     scrudb = SCDatabase(db_filename, schema_filename, app_version,
-                        schema_version)
-    scrudb.check()
+                        schema_version, 'current')
+    # scrudb.check()
     if interface == 0:
         scruinterface.print_settings()
         scruinterface.menu_main()

@@ -5,12 +5,6 @@ import os
 import scruclasses as sc
 import csv
 
-# db_filename = 'scrutini.db'
-# schema_filename = 'scrutinischema.sql'
-# app_version = 0.01
-# schema_version = 0.01
-# dbconn = None
-
 
 class SCDatabase:
     def __init__(self, db_file, schema_file, app_version, schema_version,
@@ -20,10 +14,20 @@ class SCDatabase:
         self.app_version = app_version
         self.schema_version = schema_version
         print("Connecting to DB...")
-        self.dbconn = self.create_connection(self.db_file)
+        self.settings = sc.Settings('current', self.app_version, self.schema_version,
+                    0, 0, 1)
+        if not os.path.exists(self.db_file):
+            self.dbconn = self.create_connection(self.db_file)
+            self.create_schema()
+            self.tables = Tables(self)
+            self.insert_initial_data()
+        else:
+            self.dbconn = self.create_connection(self.db_file)
+            self.tables = Tables(self)
+        # self.check()
         self.cursor = self.dbconn.cursor()
-        self.tables = Tables(self)
         self.settings = self.tables.settings.get(settings)
+        # self.tables = Tables(self)
 
     def open_connection(self):
         """Open a DB connection."""
@@ -47,13 +51,14 @@ class SCDatabase:
         print('Setting up database')
         with open(self.schema_file, 'rt') as f:
             schema = f.read()
+        # self.dbconn = self.create_connection(self.db_file)
         self.dbconn.executescript(schema)
         self.dbconn.commit()
 
     def check(self):
         """Check whether the DB is new, and create schema and load defaults"""
         if os.path.exists(self.db_file):
-            print('Database exists; check version')
+            print(f'Database {self.db_file} exists; check version')
             if self.settings.version == self.app_version:
                 print("App Version %f is current version" %
                       self.settings.version)
@@ -212,9 +217,9 @@ class TableCompetitionTypes:
 
     def insert(self, type):
         self.cursor.execute(f"insert into competitionTypes (name, abbrev,\
-                            isChampionship, protected) values ({type.name}\
-                            {type.abbrev}, {type.isChampionship},\
-                            {type.protected})")
+                            isChampionship, protected) values (\"{type.name}\",\
+                            \"{type.abbrev}\", {type.isChampionship},\
+                            {type.isProtected})")
         type.id = self.cursor.lastrowid
         return type
 
@@ -582,7 +587,8 @@ class TableDances:
 
     def insert(self, dance):
         """Create a new Dance"""
-        self.cursor.execute(f"insert into dances (name) values ({dance.name})")
+        self.cursor.execute(f"insert into dances (name) values\
+                            (\"{dance.name}\")")
         dance.id = self.cursor.lastrowid
         return dance
 
@@ -632,7 +638,7 @@ class TableScores:
         else:
             return True
 
-    def insert_score(self, score):
+    def insert(self, score):
         """Create a new Score item"""
         self.cursor.execute(f"insert into scores (dancer, event, judge,\
                             competition, score) values ({score.dancer},\
