@@ -1,14 +1,17 @@
 """Scrutini Class Definitions.2."""
 
 class Settings:
-    def __init__(self, name, version, schema, interface, lastComp, orderOfPlacings):
+    def __init__(self, name, version, schema, schema_file, db_file,
+                 interface, last_comp, placings_order):
         """Settings includes the info in settings."""
         self.name = name
         self.version = version
         self.schema = schema
+        self.schema_file = schema_file
+        self.db_file = db_file
         self.interface = interface
-        self.lastComp = lastComp
-        self.orderOfPlacings = orderOfPlacings
+        self.lastComp = last_comp
+        self.orderOfPlacings = placings_order
 
 
 class CompetitionType:

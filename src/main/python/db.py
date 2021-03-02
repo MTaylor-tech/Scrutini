@@ -1,88 +1,63 @@
 """Scrutini Database Functions."""
 import sqlite3
 import os
-# from scruclasses import *
-import scruclasses as sc
 import csv
+import classes as sc
 
 
 class SCDatabase:
-    def __init__(self, db_file, schema_file, app_version, schema_version,
-                 settings='current'):
-        self.db_file = db_file
-        self.schema_file = schema_file
-        self.app_version = app_version
-        self.schema_version = schema_version
+    """Control access to the database."""
+
+    def __init__(self, settings):
+        """Access the database."""
+        self.settings = settings
         print("Connecting to DB...")
-        self.settings = sc.Settings('current', self.app_version, self.schema_version,
-                    0, 0, 1)
-        if not os.path.exists(self.db_file):
-            self.dbconn = self.create_connection(self.db_file)
+        if not os.path.exists(self.settings.db_file):
+            self.dbconn = self.create_connection()
             self.create_schema()
             self.tables = Tables(self)
             self.insert_initial_data()
         else:
-            self.dbconn = self.create_connection(self.db_file)
+            self.dbconn = self.create_connection()
             self.tables = Tables(self)
-        # self.check()
         self.cursor = self.dbconn.cursor()
-        self.settings = self.tables.settings.get(settings)
-        # self.tables = Tables(self)
 
     def open_connection(self):
         """Open a DB connection."""
-        self.dbconn = self.create_connection(self.db_file)
+        self.dbconn = self.create_connection()
 
     def close_connection(self):
         """Close the DB connection."""
         self.dbconn.close()
 
-    def create_connection(self, db_file):
+    def create_connection(self):
         """Create a database connection to the SQLite database."""
         conn = None
         try:
-            conn = sqlite3.connect(db_file)
-        except Exception as e:
-            print(e)
+            conn = sqlite3.connect(self.settings.db_file)
+        except sqlite3.Error as error:
+            print(error)
         return conn
 
     def create_schema(self):
-        """Load the schema into the DB"""
+        """Load the schema into the DB."""
         print('Setting up database')
-        with open(self.schema_file, 'rt') as f:
-            schema = f.read()
-        # self.dbconn = self.create_connection(self.db_file)
+        with open(self.settings.schema_file, 'rt') as file:
+            schema = file.read()
         self.dbconn.executescript(schema)
         self.dbconn.commit()
 
     def check(self):
-        """Check whether the DB is new, and create schema and load defaults"""
-        if os.path.exists(self.db_file):
-            print(f'Database {self.db_file} exists; check version')
-            if self.settings.version == self.app_version:
-                print("App Version %f is current version" %
-                      self.settings.version)
-            elif (self.settings.version < self.app_version):
-                print("Settings need updated to version %f" % self.app_version)
-            else:
-                print("App needs updated to version %f to use this data" %
-                      self.settings.version)
-            if self.settings.schema == self.schema_version:
-                print("Schema version %f is current version" %
-                      self.schema_version)
-            elif self.settings.schema < self.schema_version:
-                print("Schema version %f need updated to %f" %
-                      (self.settings.schema, self.schema_version))
-            else:
-                print("App needs updated to schema version %f to use this data"
-                      % self.settings.schema)
+        """Check whether the DB is new, and create schema and load defaults."""
+        if os.path.exists(self.settings.db_file):
+            print(f'Database {self.settings.db_file} exists.')
         else:
-            print('Need to create schema')
+            print(f'{self.settings.db_file} is a new database.')
             self.create_schema()
             self.insert_initial_data()
 
     def insert_initial_data(self):
-        """Preload the DB with some necessary data"""
+        """Preload the DB with some necessary data."""
         print('Inserting initial data')
         categories = [sc.DancerCat(0, '', '', 1),
                       sc.DancerCat(0, 'Primary', 'P', 1),
@@ -92,16 +67,16 @@ class SCDatabase:
                       sc.DancerCat(0, 'Premier', 'X', 1),
                       sc.DancerCat(0, 'Choreography', 'C', 1),
                       sc.DancerCat(0, 'Special Award', 'S', 1)]
-        for c in categories:
-            self.tables.categories.insert(c)
+        for category in categories:
+            self.tables.categories.insert(category)
         types = [sc.CompetitionType(0, 'Regular', 'Reg', 0, 1),
                  sc.CompetitionType(0, 'Championship', 'Champ', 1, 1),
                  sc.CompetitionType(0, 'Premiership', 'Prem', 1, 1)]
-        for t in types:
-            self.tables.competition_types.insert(t)
-        self.tables.settings.insert(
-            sc.Settings('current', self.app_version, self.schema_version,
-                        0, 0, 1))
+        for tp in types:
+            self.tables.competition_types.insert(tp)
+        # self.tables.settings.insert(
+        #     sc.Settings('current', self.app_version, self.schema_version,
+        #                 1, 0, 1))
 
         place_values = [sc.PlaceValue(1, 137), sc.PlaceValue(2, 91),
                         sc.PlaceValue(3, 71), sc.PlaceValue(4, 53),
