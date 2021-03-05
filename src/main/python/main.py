@@ -1,6 +1,7 @@
 """Scrutini Main."""
 import argparse
 import json
+import os
 from db import SCDatabase
 from classes import Settings
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
@@ -17,19 +18,21 @@ parser.add_argument("-v", "--verbose", help="Prints extra information to the\
 parser.add_argument("-s", "--settings", help="Use the specified config file.")
 # read arguments from the command line
 args = parser.parse_args()
+# check for Verbose
+VERBOSE = bool(args.verbose)
 # check for --interface0 or -i0
 if args.interface0:
     INTERFACE = 0
-    import scruinterface0 as scruinterface
-    print("Command-Line Interface (0)")
+    # import scruinterface0 as scruinterface
+    if VERBOSE:
+        print("Command-Line Interface (0)")
 else:
     INTERFACE = 1
     import gui
-    print("GUI (1)")
-# check for Verbose
-VERBOSE = bool(args.verbose)
+    if VERBOSE:
+        print("GUI (1)")
 # check settings and database
-if args.settings:
+if args.settings and os.path.exists(args.settings):
     SETTINGS_FILE = args.settings
 else:
     SETTINGS_FILE = 'config.json'
@@ -37,24 +40,20 @@ else:
 if __name__ == "__main__":
     appctxt = ApplicationContext()
     import sys
-    with open(SETTINGS_FILE) as f:
-        s = json.load(f)
-    SETTINGS = Settings(s['name'], s['version'], s['schema'], s['schema_file'],
-                        s['db_file'], s['interface'], s['last_comp'],
-                        s['placings_order'])
-
-    APP_VERSION = 0.2
-    SCHEMA_VERSION = 0.2
-    scrudb = SCDatabase(SETTINGS)
-    # scrudb.check()
+    settings = Settings(SETTINGS_FILE, VERBOSE)
+    if VERBOSE:
+        print(settings)
+    scrudb = SCDatabase(settings)
     if INTERFACE == 0:
-        scruinterface.print_settings()
-        scruinterface.menu_main()
+        print("Command Line Interface not available in this version.")
+        # scruinterface.print_settings()
+        # scruinterface.menu_main()
     else:
         g = gui.Interface(scrudb)
         g.start()
     rc = appctxt.app.exec_()
     # del appctxt.app
+    settings.write()
     if VERBOSE:
         print(f"Exit main {rc}")
     sys.exit(rc)

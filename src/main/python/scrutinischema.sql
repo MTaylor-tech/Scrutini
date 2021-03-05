@@ -74,11 +74,11 @@ create table dancerCats (
 create table dancerGroups (
     id          integer primary key autoincrement not null,
     name        text,
+		abbrev      text,
     ageMin      integer,
     ageMax      integer,
     dancerCat   integer,
-    competition integer,
-    abbrev      text
+    competition integer
 );
 
 -- This join table is used to link Dancers with DancerGroups so that there can be many
@@ -136,16 +136,16 @@ create table judges (
     lastName    text,
     competition integer
 );
-
--- Settings stores information on the schema and app version as well as settings within the app
-create table settings (
-    name        text,
-    version     real,
-    schema      real,
-    interface   integer,
-    lastComp    integer,
-    orderPlaces integer
-);
+--
+-- -- Settings stores information on the schema and app version as well as settings within the app
+-- create table settings (
+--     name        text,
+--     version     real,
+--     schema      real,
+--     interface   integer,
+--     lastComp    integer,
+--     orderPlaces integer
+-- );
 
 -- Placing Values are the points awarded for placing in regular events
 create table placingValues (

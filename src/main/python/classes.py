@@ -1,17 +1,71 @@
-"""Scrutini Class Definitions.2."""
+"""Scrutini Class Definitions"""
+import os
+import json
+
 
 class Settings:
-    def __init__(self, name, version, schema, schema_file, db_file,
-                 interface, last_comp, placings_order):
+    def __init__(self, filename, verbose=False):
         """Settings includes the info in settings."""
-        self.name = name
-        self.version = version
-        self.schema = schema
-        self.schema_file = schema_file
-        self.db_file = db_file
-        self.interface = interface
-        self.lastComp = last_comp
-        self.orderOfPlacings = placings_order
+        self.settings_file = filename
+        self.name = None
+        self.version = None
+        self.schema = None
+        self.schema_file = None
+        self.db_file = None
+        self.interface = None
+        self.last_comp = None
+        self.placings_order = None
+        self.verbose = verbose
+        self.read()
+
+    def __str__(self):
+        if self.interface == 0:
+            iface = 'CLI'
+        elif self.interface == 1:
+            iface = 'GUI'
+        else:
+            iface = '???'
+        if self.verbose:
+            vbose = 'Yes'
+        else:
+            vbose = 'No'
+        return f"Settings \'{self.name}\' for version {self.version}:\n\
+                Database: {self.db_file}, \
+                Schema version \'{self.schema}\' from {self.schema_file}\n\
+                Interface: {self.interface} ({iface}), Verbose logging?\
+                {vbose}\nLast Competition: {self.last_comp}"
+
+    def read(self):
+        if self.verbose:
+            print(f"Loading settings from {self.settings_file}")
+        with open(self.settings_file) as f:
+            s = json.load(f)
+        self.name = s['name']
+        self.version = s['version']
+        self.schema = s['schema']
+        self.schema_file = s['schema_file']
+        self.db_file = s['db_file']
+        self.interface = s['interface']
+        self.last_comp = s['last_comp']
+        self.placings_order = s['placings_order']
+
+    def write(self):
+        if self.verbose:
+            print(f"Saving settings to {self.settings_file}")
+        settings = {
+            "name": self.name,
+            "version": self.version,
+            "schema": self.schema,
+            "schema_file": self.schema_file,
+            "db_file": self.db_file,
+            "interface": self.interface,
+            "last_comp": self.last_comp,
+            "placings_order": self.placings_order
+        }
+        if self.verbose:
+            print(settings)
+        with open(self.settings_file, 'w') as outfile:
+            json.dump(settings, outfile)
 
 
 class CompetitionType:
