@@ -13,6 +13,7 @@ from groups import GroupEditor as DancerGroupEditor
 from groups import GroupMenu as DancerGroupMenu
 from competitions import CompetitionEditor, CompetitionSelector
 from importWindow import ImportWindow
+from judges import JudgeSelector
 
 
 class SMainWindow(qt.QMainWindow):
@@ -21,7 +22,7 @@ class SMainWindow(qt.QMainWindow):
         label_text = ''
         self.label = qt.QLabel(label_text)
         self.addToolBar(qc.Qt.LeftToolBarArea, self.tool_bar())
-        # self.setUnifiedTitleAndToolBarOnMac(True)
+        self.setUnifiedTitleAndToolBarOnMac(True)
         self.app = interface
         self.db = db
         # self.app = PyQtApp()
@@ -178,8 +179,6 @@ class SMainWindow(qt.QMainWindow):
             self.label_text = ('<center>No Competition Selected</center>')
             return None
 
-    def sub_window(self, window):
-
     def select_dancerGroup(self):
         window = DancerGroupMenu(self, self.competition.id, self.db)
         window.show()
@@ -217,7 +216,7 @@ class SMainWindow(qt.QMainWindow):
         self.edit_competition()
 
 
-class Interface(qt.QApplication):
+class App(qt.QApplication):
     def __init__(self, db):
         super().__init__(sys.argv)
         # super(Interface, self).__init__()

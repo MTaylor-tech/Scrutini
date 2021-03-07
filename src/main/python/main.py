@@ -49,7 +49,7 @@ if __name__ == "__main__":
         # scruinterface.print_settings()
         # scruinterface.menu_main()
     else:
-        g = gui.Interface(scrudb)
+        g = gui.App(scrudb)
         g.start()
     rc = appctxt.app.exec_()
     # del appctxt.app

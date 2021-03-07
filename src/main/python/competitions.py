@@ -1,12 +1,14 @@
+import datetime
 import classes as sc
 import PyQt5.QtWidgets as qt
 import PyQt5.QtCore as qc
 import PyQt5.QtGui as qg
+from sWidgets import SPushButton
 
 
 class CompetitionEditor(qt.QDialog):
     def __init__(self, main_window, comp_id, db):
-        super(CompetitionEditor, self).__init__()
+        super().__init__()
         self.db = db
         self.main_window = main_window
         self.competition = self.db.tables.competitions.get(comp_id)
@@ -16,8 +18,10 @@ class CompetitionEditor(qt.QDialog):
         self.field_name = qt.QLineEdit(self.competition.name)
         self.label_location = qt.QLabel('Location:')
         self.field_location = qt.QLineEdit(self.competition.location)
-        self.date_comp_event = qc.QDate.fromString(self.competition.eventDate, 'yyyy-MM-dd 00:00:00')
-        self.date_comp_deadline = qc.QDate.fromString(self.competition.deadline, 'yyyy-MM-dd 00:00:00')
+        self.date_comp_event = qc.QDate.fromString(self.competition.eventDate,
+                                                   'yyyy-MM-dd 00:00:00')
+        self.date_comp_deadline = qc.QDate.fromString(
+            self.competition.deadline, 'yyyy-MM-dd 00:00:00')
         self.label_comp_eventDate = qt.QLabel('Event date:')
         self.calendar_comp_event = qt.QCalendarWidget()
         self.calendar_comp_event.setSelectedDate(self.date_comp_event)

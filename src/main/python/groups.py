@@ -2,17 +2,18 @@ import classes as sc
 import PyQt5.QtWidgets as qt
 import PyQt5.QtCore as qc
 import PyQt5.QtGui as qg
+from sWidgets import SPushButton, verify, ask_save
 
 
 class GroupEditor(qt.QDialog):
     def __init__(self, main_window, dancerGroup, db):
-        super(DancerGroupEditor, self).__init__()
+        super().__init__()
         self.db = db
         self.main_window = main_window
         self.dancerGroup = dancerGroup
         # self.dancerGroup = self.db.tables.groups.get(dancerGroup_id)
         self.changes_made = False
-        #id, name, abbrev, ageMin, ageMax, dancerCat, competition
+        # id, name, abbrev, ageMin, ageMax, dancerCat, competition
         self.layout = qt.QVBoxLayout()
         self.label_name = qt.QLabel('Group Name:')
         self.field_name = qt.QLineEdit(self.dancerGroup.name)
@@ -74,22 +75,24 @@ class GroupEditor(qt.QDialog):
         self.table_dancers.setColumnHidden(4, True)
 
         self.table_events = qt.QTableWidget()
-        self.events_headers = ['Event','In Overall','Places','Stamp','id']
+        self.events_headers = ['Event', 'In Overall', 'Places', 'Stamp', 'id']
         self.table_events.setColumnCount(len(self.events_headers))
         self.table_events.setHorizontalHeaderLabels(self.events_headers)
         self.column_widths = [260, 40, 60, 40, 0]
         column = 0
         while column < len(self.column_widths):
-            self.table_events.setColumnWidth(column,self.column_widths[column])
+            self.table_events.setColumnWidth(column,
+                                             self.column_widths[column])
             column += 1
         self.table_events.setColumnHidden(4, True)
         self.events = self.db.tables.dancers.get_by_group(self.dancerGroup.id)
         row = 0
-        #id, name, dancerGroup, dance, competition, countsForOverall, numPlaces, earnsStamp
+        # id, name, dancerGroup, dance, competition,
+        # countsForOverall, numPlaces, earnsStamp
         for event in self.events:
             if event is not None:
-                #dance = scrudb.retrieve_dance(event.dance)
-                #item_name = QTableWidgetItem(dance.name)
+                # dance = scrudb.retrieve_dance(event.dance)
+                # item_name = QTableWidgetItem(dance.name)
                 dances = self.db.tables.dances.get_all()
                 selector_dance = qt.QComboBox()
                 index = 999999
@@ -169,7 +172,6 @@ class GroupEditor(qt.QDialog):
         self.setWindowModality(qc.Qt.ApplicationModal)
         self.setLayout(self.layout)
 
-
     def save_button(self, sender=None):
         self.dancerGroup.name = self.field_name.text()
         self.dancerGroup.abbrev = self.field_abbrev.text()
@@ -180,25 +182,29 @@ class GroupEditor(qt.QDialog):
         self.dancerGroup.dancerCat = self.selector_dancerCat.currentIndex()
         self.db.tables.groups.update(self.dancerGroup)
         row = 0
-        self.dancers_in_group = self.db.tables.dancers.get_by_group(self.dancerGroup.id)
+        self.dancers_in_group = self.db.tables.dancers.get_by_group(
+            self.dancerGroup.id)
         self.dancer_ids = []
         for dancer in self.dancers_in_group:
             if dancer is not None:
                 self.dancer_ids.append(dancer.id)
         while row < self.table_dancers.rowCount():
             checkbox_in_group = self.table_dancers.cellWidget(row, 0)
-            dancer_id_text = self.table_dancers.item(row,4).text()
-            if (dancer_id_text != ''):
+            dancer_id_text = self.table_dancers.item(row, 4).text()
+            if dancer_id_text != '':
                 dancer_id = int(dancer_id_text)
             else:
                 dancer_id = 9999999999999999999
-            if checkbox_in_group.checkState() == 0 and dancer_id in self.dancer_ids:
-                print('dancer [%s] in row %d is in group but should be removed' % (dancer_id_text, row))
-                self.db.tables.groups.unjoin(dancer_id,self.dancerGroup.id)
-            elif checkbox_in_group.checkState() == 2 and dancer_id not in self.dancer_ids:
-                print('dancer [%s] in row %d is not in group but should be added' % (dancer_id_text, row))
-                self.db.tables.groups.join(dancer_id,self.dancerGroup.id)
-
+            if checkbox_in_group.checkState() == 0 and (dancer_id in
+                                                        self.dancer_ids):
+                print('dancer [%s] in row %d is in group but should be removed'
+                      % (dancer_id_text, row))
+                self.db.tables.groups.unjoin(dancer_id, self.dancerGroup.id)
+            elif checkbox_in_group.checkState() == 2 and (dancer_id not in
+                                                          self.dancer_ids):
+                print('dancer [%s] in row %d is not in group but should be\
+                      added' % (dancer_id_text, row))
+                self.db.tables.groups.join(dancer_id, self.dancerGroup.id)
             row += 1
 
         row = 0
@@ -206,13 +212,14 @@ class GroupEditor(qt.QDialog):
             event_id = int(self.table_events.item(row, 4).text())
             event = self.db.tables.events.get(event_id)
             selector_dance = self.table_events.cellWidget(row, 0)
-            event.name = ('%s - %s' % (self.dancerGroup.name, selector_dance.currentText()))
+            event.name = ('%s - %s' % (self.dancerGroup.name,
+                                       selector_dance.currentText()))
             print(event.name)
-            dances = self.db.tables.dances.get()
+            dances = self.db.tables.dances.get_all()
             index = 999999
             for dance in dances:
-                if dance[0] < index:
-                    index = dance[0]
+                if dance.id < index:
+                    index = dance.id
             event.dance = selector_dance.currentIndex() + index
             if self.table_events.item(row, 2).text().isdigit():
                 event.numPlaces = int(self.table_events.item(row, 2).text())
@@ -233,15 +240,17 @@ class GroupEditor(qt.QDialog):
         self.changes_made = False
 
     def new_event(self, sender=None):
-        event = sc.Event(0,'',self.dancerGroup.id,0,self.dancerGroup.competition,1,6,1)
+        event = sc.Event(0, '', self.dancerGroup.id, 0,
+                         self.dancerGroup.competition, 1, 6, 1)
         event = self.db.tables.events.insert(event)
         row = self.table_events.rowCount()
-        #id, name, dancerGroup, dance, competition, countsForOverall, numPlaces, earnsStamp
+        # id, name, dancerGroup, dance, competition,
+        # countsForOverall, numPlaces, earnsStamp
         self.table_events.insertRow(row)
         dances = self.db.tables.dances.get_all()
         selector_dance = qt.QComboBox()
         for dance in dances:
-            selector_dance.addItem(dance[1])
+            selector_dance.addItem(dance.name)
         selector_dance.setCurrentIndex(0)
         selector_dance.currentIndexChanged.connect(self.item_changed)
         item_places = qt.QTableWidgetItem('%d' % event.numPlaces)
@@ -269,11 +278,17 @@ class GroupEditor(qt.QDialog):
     def delete_event(self, sender=None):
         row = self.table_events.currentRow()
         if row is not None:
-            event = self.db.tables.events.get(int(self.table_events.item(row, 4).text()))
+            # event = self.db.tables.events.get(int(self.table_events.item(
+            # row, 4).text()))
+            event = self.db.tables.events.get(int(self.table_events.item(
+                row, 4)))
             dance = self.db.tables.dances.get(event.dance)
             if event is not None:
-                verity = verify(('Are you sure you want to delete event %s %s?' % (self.dancerGroup.name, dance.name)),
-                                'This will delete all data for the given event and all scores associated with this event. This cannot be undone.')
+                verity = verify(('Are you sure you want to delete event %s %s?'
+                                 % (self.dancerGroup.name, dance.name)),
+                                'This will delete all data for the given event\
+                                and all scores associated with this event.\
+                                This cannot be undone.')
                 if verity:
                     print('Will delete event %d' % event.id)
                     self.db.tables.events.remove(event.id)
@@ -312,7 +327,7 @@ class GroupEditor(qt.QDialog):
 
 class GroupMenu(qt.QDialog):
     def __init__(self, main_window, comp_id, db):
-        super(DancerGroupMenu, self).__init__()
+        super().__init__()
         self.db = db
         self.main_window = main_window
         self.comp_id = comp_id
