@@ -10,6 +10,8 @@ class CompetitionEditor(qt.QDialog):
     def __init__(self, main_window, comp_id, db):
         super().__init__()
         self.db = db
+        if self.db.settings.verbose:
+            print("CompetitionEditor in competitions.py")
         self.main_window = main_window
         self.competition = self.db.tables.competitions.get(comp_id)
         self.changes_made = False
@@ -67,13 +69,15 @@ class CompetitionEditor(qt.QDialog):
         self.db.tables.competitions.update(self.competition)
         self.main_window.set_competition(self.competition.id)
         self.changes_made = False
+        self.hide()
 
     def exit_button(self, sender=None):
         if self.changes_made:
             saveResult = ask_save()
         else:
             saveResult = 'discard'
-
+        if self.db.settings.verbose:
+            print(f"saveResult: {saveResult}")
         if saveResult == 'discard':
             self.hide()
         elif saveResult == 'save':
@@ -91,6 +95,8 @@ class CompetitionSelector(qt.QDialog):
     def __init__(self, main_window):
         super(CompetitionSelector, self).__init__()
         self.main_window = main_window
+        if self.main_window.db.settings.verbose:
+            print("CompetitionSelector in competitions.py")
         self.layout = qt.QVBoxLayout()
         self.layout.addWidget(qt.QLabel('Choose a competition:'))
         self.competitions = self.main_window.db.tables.competitions.get_all()

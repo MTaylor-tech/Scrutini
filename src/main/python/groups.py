@@ -9,6 +9,8 @@ class GroupEditor(qt.QDialog):
     def __init__(self, main_window, dancerGroup, db):
         super().__init__()
         self.db = db
+        if self.db.settings.verbose:
+            print("GroupEditor in groups.py")
         self.main_window = main_window
         self.dancerGroup = dancerGroup
         # self.dancerGroup = self.db.tables.groups.get(dancerGroup_id)
