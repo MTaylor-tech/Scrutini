@@ -110,6 +110,7 @@ class ResultsGroupBox(qt.QGroupBox):
             self.layout.addWidget(label_score)
         self.update()
 
+
 class ResultsViewWindow(qt.QDialog):
     def __init__(self, main_window, comp_id, db):
         super(ResultsViewWindow, self).__init__()
@@ -131,34 +132,42 @@ class ResultsViewWindow(qt.QDialog):
         for dancerGroup in self.dancerGroups:
             self.selector_dancerGroup.addItem(dancerGroup.name)
             self.dancerGroup_ids.append(dancerGroup.id)
-        self.selector_dancerGroup.currentIndexChanged.connect(self.new_group_selected)
+        self.selector_dancerGroup.currentIndexChanged.connect(
+            self.new_group_selected)
         self.layout.addWidget(self.selector_dancerGroup)
-        self.dancerGroup = self.db.tables.groups.get(self.dancerGroup_ids[self.selector_dancerGroup.currentIndex()])
+        self.dancerGroup = self.db.tables.groups.get(
+            self.dancerGroup_ids[self.selector_dancerGroup.currentIndex()])
         self.events = self.db.tables.events.get_by_group(self.dancerGroup.id)
         self.dancers = self.db.tables.events.get_by_group(self.dancerGroup.id)
         self.overall_scores = {}
         self.print_label = ''
         for dancer in self.dancers:
             self.overall_scores[dancer.id] = 0
-        i=1
-        n=1
+        i = 1
+        n = 1
         for event in self.events:
-            results_box = ResultsGroupBox(event.name, event.id, self.db, self.main_window)
-            #self.groupBox_scores_layout.addWidget(results_box)
-            if (i%2==0):
-                self.groupBox_scores_layout.addWidget(results_box, n,1,1,1, qc.Qt.AlignRight)
+            results_box = ResultsGroupBox(event.name, event.id, self.db,
+                                          self.main_window)
+            # self.groupBox_scores_layout.addWidget(results_box)
+            if i % 2 == 0:
+                # self.groupBox_scores_layout.addWidget(results_box, n,1,1,1, qc.Qt.AlignRight)
+                self.groupBox_scores_layout.addWidget(results_box)
                 n += 1
             else:
-                self.groupBox_scores_layout.addWidget(results_box, n,1,1,1,qc.Qt.AlignLeft)
-            self.print_label += ('%s::%s:: ::' % (event.name, results_box.get_print_label()))
-            if (event.countsForOverall == 1):
-                #print(event.name)
+                # self.groupBox_scores_layout.addWidget(results_box, n,1,1,1,qc.Qt.AlignLeft)
+                self.groupBox_scores_layout.addWidget(results_box)
+            self.print_label += ('%s::%s:: ::' % (event.name,
+                                 results_box.get_print_label()))
+            if event.countsForOverall == 1:
+                if self.db.settings.verbose:
+                    print(event.name)
                 event_placing_scores = results_box.get_placing_scores()
                 for dancer, points in event_placing_scores.items():
-                    #print('(%d) - [%6.2f]' % (dancer, points))
-                    self.overall_scores[dancer] += points
+                    if self.db.settings.verbose:
+                        print('(%d) - [%6.2f]' % (dancer, points))
+                    if self.overall_scores.get(dancer) is not None:
+                        self.overall_scores[dancer] += points
             i += 1
-
         self.overall_scores_sorted = [(k, self.overall_scores[k]) for k in sorted(self.overall_scores, key=self.overall_scores.get, reverse=True)]
         self.groupBox_overall = qt.QGroupBox('Overall Results for %s' % self.dancerGroup.name)
         self.groupBox_overall_layout = qt.QVBoxLayout()
@@ -258,10 +267,12 @@ class ResultsViewWindow(qt.QDialog):
                 self.groupBox_scores_layout.addWidget(results_box, n,1,1,1,qc.Qt.AlignLeft)
             self.print_label += ('%s::%s:: ::' % (event.name, results_box.get_print_label()))
             if (event.countsForOverall == 1):
-                #print(event.name)
+                if self.db.settings.verbose:
+                    print(event.name)
                 event_placing_scores = results_box.get_placing_scores()
                 for dancer, points in event_placing_scores.items():
-                    #print('(%d) - [%6.2f]' % (dancer, points))
+                    if self.db.settings.verbose:
+                        print('(%d) - [%6.2f]' % (dancer, points))
                     self.overall_scores[dancer] += points
             i += 1
 
@@ -273,8 +284,10 @@ class ResultsViewWindow(qt.QDialog):
             if points <= 0:
                 break
             dancer = self.db.tables.dancers.get(dancer_id)
-            label_overall = qt.qQLabel('%d. (%s) %s %s - %s, %s: %d points' % (place, dancer.number,
-                                                    dancer.firstName, dancer.lastName, dancer.city, dancer.state, points))
+            label_overall = qt.QLabel('%d. (%s) %s %s - %s, %s: %d points' %
+                                       (place, dancer.number, dancer.firstName,
+                                        dancer.lastName, dancer.city,
+                                        dancer.state, points))
             self.groupBox_overall_layout.addWidget(label_overall)
             self.print_label += ('%s::' % label_overall.text())
             place += 1

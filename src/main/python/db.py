@@ -78,9 +78,6 @@ class SCDatabase:
                  sc.CompetitionType(0, 'Premiership', 'Prem', 1, 1)]
         for tp in types:
             self.tables.competition_types.insert(tp)
-        # self.tables.settings.insert(
-        #     sc.Settings('current', self.app_version, self.schema_version,
-        #                 1, 0, 1))
         place_values = [sc.PlaceValue(1, 137), sc.PlaceValue(2, 91),
                         sc.PlaceValue(3, 71), sc.PlaceValue(4, 53),
                         sc.PlaceValue(5, 37), sc.PlaceValue(6, 23)]
