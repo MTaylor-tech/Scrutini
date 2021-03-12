@@ -9,6 +9,7 @@ class ScoreEntryWindow(qt.QDialog):
         super(ScoreEntryWindow, self).__init__()
         self.db = db
         self.main_window = main_window
+        self.main_window.setCentralWidget(self)
         self.comp_id = comp_id
         self.competition = self.db.tables.competitions.get(comp_id)
         self.changes_made = False

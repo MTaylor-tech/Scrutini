@@ -12,6 +12,7 @@ class JudgeSelector(qt.QDialog):
         if self.db.settings.verbose:
             print("JudgeSelector in judges.py")
         self.main_window = main_window
+        self.main_window.setCentralWidget(self)
         self.comp_id = comp_id
         self.changes_made = False
         self.layout = qt.QVBoxLayout()
@@ -20,10 +21,11 @@ class JudgeSelector(qt.QDialog):
         self.headers = ['First Name', 'Last Name', 'id']
         self.table_judges.setColumnCount(len(self.headers))
         self.table_judges.setHorizontalHeaderLabels(self.headers)
-        self.column_widths = [120,150,0]
+        self.column_widths = [120, 150, 0]
         column = 0
         while column < len(self.column_widths):
-            self.table_judges.setColumnWidth(column, self.column_widths[column])
+            self.table_judges.setColumnWidth(column,
+                                             self.column_widths[column])
             column += 1
         row = 0
         for judge in self.judges:
@@ -93,6 +95,7 @@ class JudgeSelector(qt.QDialog):
                     print('Nothing deleted')
 
     def save_button(self, sender=None):
+        self.table_judges.setFocus()
         row = 0
         while row < self.table_judges.rowCount():
             judge_id = int(self.table_judges.item(row, 2).text())

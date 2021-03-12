@@ -157,14 +157,14 @@ class TableCompetitionTypes:
         return sc.CompetitionType(*self.cursor.fetchone())
 
     def new(self):
-        new_type = sc.CompetitionType(0,'','',0,0)
+        new_type = sc.CompetitionType(0, '', '', 0, 0)
         return self.insert(new_type)
 
     def insert(self, type):
         self.cursor.execute(f"insert into competitionTypes (name, abbrev,\
-                            isChampionship, protected) values (\"{type.name}\",\
-                            \"{type.abbrev}\", {type.isChampionship},\
-                            {type.isProtected})")
+                            isChampionship, protected) values\
+                            (\"{type.name}\", \"{type.abbrev}\",\
+                            {type.isChampionship}, {type.isProtected})")
         type.id = self.cursor.lastrowid
         return type
 
@@ -203,7 +203,7 @@ class TableCompetitions:
 
     def new(self):
         today = datetime.date.today()
-        competition = sc.Competition(0,'','',today,today,'',0,0)
+        competition = sc.Competition(0, '' ,'' ,today, today, '', 0, 0)
         return self.insert(competition)
 
     def insert(self, comp):
@@ -649,6 +649,8 @@ class TableEvents:
         results = self.cursor.fetchall()
         events = []
         for e in results:
+            if self.db.settings.verbose:
+                print(*e)
             events.append(sc.Event(*e))
         return events
 
@@ -657,6 +659,8 @@ class TableEvents:
         results = self.cursor.fetchall()
         events = []
         for e in results:
+            if self.db.settings.verbose:
+                print(*e)
             events.append(sc.Event(*e))
         return events
 
@@ -664,8 +668,8 @@ class TableEvents:
         self.cursor.execute('select * from events where id = %d' % int(id))
         return sc.Event(*self.cursor.fetchone())
 
-    def new(self, comp_id=0):
-        event = sc.Event(0, '', None, None, comp_id, 0, 0, 0)
+    def new(self, dancerGroup_id=0, comp_id=0):
+        event = sc.Event(0, '', dancerGroup_id, 0, comp_id, 1, 6, 1)
         return self.insert(event)
 
     def insert(self, event):
@@ -679,6 +683,8 @@ class TableEvents:
         return event
 
     def update(self, event):
+        if self.db.settings.verbose:
+            print(f"DB TableEvents Update: {event.name}")
         self.cursor.execute('update events set name = \"%s\", dancerGroup =\
                              %d, dance = %d, competition = %d,\
                              countsForOverall = %d, numPlaces = %d,\

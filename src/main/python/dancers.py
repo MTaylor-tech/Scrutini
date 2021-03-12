@@ -2,11 +2,13 @@ import classes as sc
 import PyQt5.QtWidgets as qt
 import PyQt5.QtCore as qc
 import PyQt5.QtGui as qg
+from sWidgets import verify, ask_save
 
 class DancerEditor(qt.QDialog):
     def __init__(self, main_window, comp_id, db):
         super(DancerEditor, self).__init__()
         self.main_window = main_window
+        self.main_window.setCentralWidget(self)
         self.comp_id = comp_id
         self.db = db
         self.changes_made = False
@@ -116,8 +118,6 @@ class DancerEditor(qt.QDialog):
         self.table_dancers.setColumnHidden(18,True)
         self.table_dancers.setSortingEnabled(True)
         self.table_dancers.itemChanged.connect(self.item_changed)
-        #connect(self.table_dancers,
-        #    SIGNAL(itemChanged(QTableWidgetItem *)), self, SLOT(on_any_itemChanged(QTableWidgetItem *)));
         self.layout.addWidget(self.table_dancers)
         self.newButton = qt.QPushButton('&New Competitor')
         self.newButton.clicked.connect(self.new_dancer)
@@ -250,8 +250,10 @@ class DancerEditor(qt.QDialog):
         if row is not None:
             dancer = self.db.tables.dancers.get(int(self.table_dancers.item(row, 17).text()))
             if dancer is not None:
-                verity = verify(('Are you sure you want to delete dancer %s %s?' % (dancer.firstName, dancer.lastName)),
-                                'This will delete all data for the given competitor. This cannot be undone.')
+                verity = verify(('Are you sure you want to delete dancer %s\
+                                 %s?' % (dancer.firstName, dancer.lastName)),
+                                'This will delete all data for the given\
+                                competitor. This cannot be undone.')
                 if verity:
                     print('Will delete dancer %d' % dancer.id)
                     self.db.tables.dancers.remove(dancer.id)
@@ -260,6 +262,7 @@ class DancerEditor(qt.QDialog):
                     print('Nothing deleted')
 
     def save_button(self, sender=None):
+        self.table_dancers.setFocus()
         row = 0
         while row < self.table_dancers.rowCount():
             dancer_id = int(self.table_dancers.item(row, 17).text())

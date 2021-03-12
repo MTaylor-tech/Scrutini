@@ -14,6 +14,7 @@ class ImportWindow(qt.QDialog):
         self.db = db
         self.filename = ""
         self.main_window = main_window
+        self.main_window.setCentralWidget(self)
         self.competition = self.db.tables.competitions.get(comp_id)
         self.layout = qt.QVBoxLayout()
         self.resize(600,800)

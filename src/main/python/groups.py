@@ -12,6 +12,7 @@ class GroupEditor(qt.QDialog):
         if self.db.settings.verbose:
             print("GroupEditor in groups.py")
         self.main_window = main_window
+        self.main_window.setCentralWidget(self)
         self.dancerGroup = dancerGroup
         # self.dancerGroup = self.db.tables.groups.get(dancerGroup_id)
         self.changes_made = False
@@ -35,21 +36,24 @@ class GroupEditor(qt.QDialog):
         if self.dancerGroup.dancerCat is not None:
             self.selector_dancerCat.setCurrentIndex(self.dancerGroup.dancerCat)
         else:
-            selector_dancerCat.setCurrentIndex(0)
-        self.dancers_in_group = self.db.tables.dancers.get_by_group(dancerGroup.id)
+            self.selector_dancerCat.setCurrentIndex(0)
+        self.dancers_in_group = \
+            self.db.tables.dancers.get_by_group(dancerGroup.id)
         self.dancer_ids = []
         for dancer in self.dancers_in_group:
             if dancer is not None:
                 self.dancer_ids.append(dancer.id)
         self.table_dancers = qt.QTableWidget()
-        self.headers = ['', 'Num','First Name','Last Name','id']
+        self.headers = ['', 'Num', 'First Name', 'Last Name', 'id']
         self.table_dancers.setColumnCount(len(self.headers))
         self.table_dancers.setHorizontalHeaderLabels(self.headers)
         self.column_widths = [20, 40, 120, 150, 0]
-        all_dancers = self.db.tables.dancers.get_by_competition(self.dancerGroup.competition)
+        all_dancers = self.db.tables.dancers\
+            .get_by_competition(self.dancerGroup.competition)
         column = 0
         while column < len(self.column_widths):
-            self.table_dancers.setColumnWidth(column,self.column_widths[column])
+            self.table_dancers.setColumnWidth(column,
+                                              self.column_widths[column])
             column += 1
         row = 0
         for dancer in all_dancers:
@@ -87,7 +91,7 @@ class GroupEditor(qt.QDialog):
                                              self.column_widths[column])
             column += 1
         self.table_events.setColumnHidden(4, True)
-        self.events = self.db.tables.dancers.get_by_group(self.dancerGroup.id)
+        self.events = self.db.tables.events.get_by_group(self.dancerGroup.id)
         row = 0
         # id, name, dancerGroup, dance, competition,
         # countsForOverall, numPlaces, earnsStamp
@@ -99,9 +103,9 @@ class GroupEditor(qt.QDialog):
                 selector_dance = qt.QComboBox()
                 index = 999999
                 for dance in dances:
-                    if dance[0] < index:
-                        index = dance[0]
-                    selector_dance.addItem(dance[1])
+                    if dance.id < index:
+                        index = dance.id
+                    selector_dance.addItem(dance.name)
                 if event.dance is not None:
                     selector_dance.setCurrentIndex(event.dance - index)
                 else:
@@ -123,7 +127,7 @@ class GroupEditor(qt.QDialog):
                 item_event_id = qt.QTableWidgetItem('%d' % event.id)
 
                 self.table_events.setRowCount(row+1)
-                #self.table_events.setItem(row, 0, item_name)
+                # self.table_events.setItem(row, 0, item_name)
                 self.table_events.setCellWidget(row, 0, selector_dance)
                 self.table_events.setItem(row, 2, item_places)
                 self.table_events.setCellWidget(row, 1, checkbox_counts)
@@ -175,6 +179,7 @@ class GroupEditor(qt.QDialog):
         self.setLayout(self.layout)
 
     def save_button(self, sender=None):
+        self.setFocus()
         self.dancerGroup.name = self.field_name.text()
         self.dancerGroup.abbrev = self.field_abbrev.text()
         if (self.field_ageMin.text().isdigit()):
@@ -199,16 +204,17 @@ class GroupEditor(qt.QDialog):
                 dancer_id = 9999999999999999999
             if checkbox_in_group.checkState() == 0 and (dancer_id in
                                                         self.dancer_ids):
-                print('dancer [%s] in row %d is in group but should be removed'
-                      % (dancer_id_text, row))
+                if self.db.settings.verbose:
+                    print('dancer [%s] in row %d is in group but should be\
+                          removed' % (dancer_id_text, row))
                 self.db.tables.groups.unjoin(dancer_id, self.dancerGroup.id)
             elif checkbox_in_group.checkState() == 2 and (dancer_id not in
                                                           self.dancer_ids):
-                print('dancer [%s] in row %d is not in group but should be\
-                      added' % (dancer_id_text, row))
+                if self.db.settings.verbose:
+                    print('dancer [%s] in row %d is not in group but should be\
+                           added' % (dancer_id_text, row))
                 self.db.tables.groups.join(dancer_id, self.dancerGroup.id)
             row += 1
-
         row = 0
         while row < self.table_events.rowCount():
             event_id = int(self.table_events.item(row, 4).text())
@@ -216,7 +222,8 @@ class GroupEditor(qt.QDialog):
             selector_dance = self.table_events.cellWidget(row, 0)
             event.name = ('%s - %s' % (self.dancerGroup.name,
                                        selector_dance.currentText()))
-            print(event.name)
+            if self.db.settings.verbose:
+                print(event.name)
             dances = self.db.tables.dances.get_all()
             index = 999999
             for dance in dances:
@@ -235,16 +242,16 @@ class GroupEditor(qt.QDialog):
                 event.earnsStamp = 1
             else:
                 event.earnsStamp = 0
-
             self.db.tables.events.update(event)
-
             row += 1
         self.changes_made = False
 
     def new_event(self, sender=None):
-        event = sc.Event(0, '', self.dancerGroup.id, 0,
-                         self.dancerGroup.competition, 1, 6, 1)
-        event = self.db.tables.events.insert(event)
+        event = self.db.tables.events.new(self.dancerGroup.id,
+                                          self.dancerGroup.competition)
+        # event = sc.Event(0, '', self.dancerGroup.id, 0,
+        #                  self.dancerGroup.competition, 1, 6, 1)
+        # event = self.db.tables.events.insert(event)
         row = self.table_events.rowCount()
         # id, name, dancerGroup, dance, competition,
         # countsForOverall, numPlaces, earnsStamp
@@ -292,18 +299,22 @@ class GroupEditor(qt.QDialog):
                                 and all scores associated with this event.\
                                 This cannot be undone.')
                 if verity:
-                    print('Will delete event %d' % event.id)
+                    if self.db.settings.verbose:
+                        print('Will delete event %d' % event.id)
                     self.db.tables.events.remove(event.id)
                     self.table_events.removeRow(row)
                 else:
                     print('Nothing deleted')
 
     def delete_group(self, sender=None):
-        verity = verify(('Are you sure you want to delete competitor group %s?' % self.dancerGroup.name),
-                                'This will delete all data for the given group and all scores associated with this group. This cannot be undone.')
+        verity = verify(('Are you sure you want to delete competitor group\
+                         %s?' % self.dancerGroup.name), 'This will delete all\
+                         data for the given group and all scores associated\
+                         with this group. This cannot be undone.')
         if verity:
-            print('Will delete group %d' % dancerGroup.id)
-            self.db.tables.groups.remove(dancerGroup.id)
+            if self.db.settings.verbose:
+                print('Will delete group %d' % self.dancerGroup.id)
+            self.db.tables.groups.remove(self.dancerGroup.id)
             self.hide()
         else:
             print('Nothing deleted')
@@ -313,7 +324,8 @@ class GroupEditor(qt.QDialog):
             saveResult = ask_save()
         else:
             saveResult = 'discard'
-
+        if self.db.settings.verbose:
+            print(saveResult)
         if saveResult == 'discard':
             self.hide()
         elif saveResult == 'save':
@@ -323,7 +335,6 @@ class GroupEditor(qt.QDialog):
             pass
 
     def item_changed(self, sender=None):
-        print('Item changed')
         self.changes_made = True
 
 
@@ -332,13 +343,16 @@ class GroupMenu(qt.QDialog):
         super().__init__()
         self.db = db
         self.main_window = main_window
+        self.main_window.setCentralWidget(self)
         self.comp_id = comp_id
         self.layout = qt.QVBoxLayout()
         self.layout.addWidget(qt.QLabel('Choose a Competitor Group:'))
         self.dancerGroups = self.db.tables.groups.get_by_competition(comp_id)
         self.dgButtons = []
         for dancerGroup in self.dancerGroups:
-            dgButton = SPushButton(('[%s] %s' % (dancerGroup.abbrev, dancerGroup.name)),self,dancerGroup.id,self.set_dancer_group)
+            dgButton = SPushButton(('[%s] %s' % (dancerGroup.abbrev,
+                                                 dancerGroup.name)),
+                                   self, dancerGroup.id, self.set_dancer_group)
             dgButton.clicked.connect(dgButton.on_button_clicked)
             self.dgButtons.append(dgButton)
         for dgButton in self.dgButtons:
@@ -353,9 +367,6 @@ class GroupMenu(qt.QDialog):
         self.setLayout(self.layout)
 
     def new_group(self, sender=None):
-        # dancerGroup = sc.DancerGroup(0,'','',4,99,0,self.comp_id)
-        # dancerGroup = self.db.tables.groups.insert(dancerGroup)
-        # id, name, abbrev, ageMin, ageMax, dancerCat, competition
         group = self.db.tables.groups.new(self.comp_id)
         self.set_dancer_group(group.id)
 
@@ -363,6 +374,7 @@ class GroupMenu(qt.QDialog):
         dancerGroup = self.db.tables.groups.get(dancerGroup_id)
         if dancerGroup is not None:
             if self.main_window.settings.verbose:
-                print('Group: [%s] %s' % (dancerGroup.abbrev, dancerGroup.name))
+                print('Group: [%s] %s' %
+                      (dancerGroup.abbrev, dancerGroup.name))
             self.hide()
             self.main_window.edit_dancerGroup(dancerGroup)

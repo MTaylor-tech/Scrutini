@@ -13,6 +13,7 @@ class CompetitionEditor(qt.QDialog):
         if self.db.settings.verbose:
             print("CompetitionEditor in competitions.py")
         self.main_window = main_window
+        self.main_window.setCentralWidget(self)
         self.competition = self.db.tables.competitions.get(comp_id)
         self.changes_made = False
         self.layout = qt.QVBoxLayout()

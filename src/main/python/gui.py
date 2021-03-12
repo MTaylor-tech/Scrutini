@@ -6,7 +6,7 @@ import PyQt5.QtWidgets as qt
 import PyQt5.QtCore as qc
 import PyQt5.QtGui as qg
 from sWidgets import SPushButton, on_button_clicked, verify, ask_save, is_float
-from Results import ResultsViewWindow  # ResultsGroupBox
+from resultsc import ResultsViewWindow  # ResultsGroupBox
 from scores import ScoreEntryWindow
 from dancers import DancerEditor
 from groups import GroupEditor as DancerGroupEditor
@@ -21,7 +21,7 @@ class SMainWindow(qt.QMainWindow):
         super(SMainWindow, self).__init__()
         label_text = ''
         self.label = qt.QLabel(label_text)
-        self.addToolBar(qc.Qt.LeftToolBarArea, self.tool_bar())
+        self.toolbar = self.addToolBar(qc.Qt.LeftToolBarArea, self.tool_bar())
         self.setUnifiedTitleAndToolBarOnMac(True)
         self.app = interface
         self.db = db
@@ -68,7 +68,7 @@ class SMainWindow(qt.QMainWindow):
             'Define Competitor &Groups && Dances')
         button_import = qt.QPushButton('&Import CSV')
         button_delete = qt.QPushButton('&Delete Competition')
-        # button_exit = qt.QPushButton('E&xit')
+        button_exit = qt.QPushButton('E&xit')
         button_scrutineer.clicked.connect(self.enter_scores)
         button_view_scores.clicked.connect(self.view_scores)
         button_comp.clicked.connect(self.edit_competition)
@@ -78,7 +78,7 @@ class SMainWindow(qt.QMainWindow):
         button_dancerGroups.clicked.connect(self.select_dancerGroup)
         button_import.clicked.connect(self.import_csv)
         button_delete.clicked.connect(self.delete_competition)
-        # button_exit.clicked.connect(self.exit_app)
+        button_exit.clicked.connect(self.exit_app)
         layout = qt.QToolBar(self)
         layout.addWidget(self.label)
         layout.addWidget(button_scrutineer)
@@ -90,7 +90,7 @@ class SMainWindow(qt.QMainWindow):
         layout.addWidget(button_dancerGroups)
         layout.addWidget(button_import)
         layout.addWidget(button_delete)
-        # layout.addWidget(button_exit)
+        layout.addWidget(button_exit)
         layout.setOrientation(qc.Qt.Vertical)
         return layout
 
@@ -130,27 +130,32 @@ class SMainWindow(qt.QMainWindow):
         dgEditor.exec_()
 
     def disable_buttons(self):
-        self.button_scrutineer.setEnabled = False
-        self.button_comp.setEnabled = False
-        self.button_dancers.setEnabled = False
-        self.button_judges.setEnabled = False
-        self.button_dancerGroups.setEnabled = False
-        self.button_import.setEnabled = False
-        self.button_delete.setEnabled = False
+        # self.button_scrutineer.setEnabled = False
+        # self.button_comp.setEnabled = False
+        # self.button_dancers.setEnabled = False
+        # self.button_judges.setEnabled = False
+        # self.button_dancerGroups.setEnabled = False
+        # self.button_import.setEnabled = False
+        # self.button_delete.setEnabled = False
+        for button in self.toolbar.children():
+            button.setEnabled = False
 
     def enable_buttons(self):
-        self.button_scrutineer.setEnabled = True
-        self.button_comp.setEnabled = True
-        self.button_dancers.setEnabled = True
-        self.button_judges.setEnabled = True
-        self.button_dancerGroups.setEnabled = True
-        self.button_import.setEnabled = True
-        self.button_delete.setEnabled = True
+        # self.button_scrutineer.setEnabled = True
+        # self.button_comp.setEnabled = True
+        # self.button_dancers.setEnabled = True
+        # self.button_judges.setEnabled = True
+        # self.button_dancerGroups.setEnabled = True
+        # self.button_import.setEnabled = True
+        # self.button_delete.setEnabled = True
+        for button in self.toolbar.children():
+            button.setEnabled = True
 
     def get_formatted_date(self, date):
         format_str = '%d %b %Y'
         otherformat_str = '%Y-%m-%d'
-        return (datetime.datetime.strftime(datetime.datetime.strptime(('%s' % date)[0:10], otherformat_str).date(), format_str))
+        return (datetime.datetime.strftime(datetime.datetime.strptime(
+            ('%s' % date)[0:10], otherformat_str).date(), format_str))
 
     def retrieve_competition(self):
         competitions = self.db.tables.competitions.get_all()
@@ -164,16 +169,19 @@ class SMainWindow(qt.QMainWindow):
         else:
             self.select_competition()
             self.settings.last_comp = self.competition.id
-            # self.db.tables.settings.update(self.settings)
             return self.competition
 
     def set_competition(self, comp_id):
         self.competition = self.db.tables.competitions.get(comp_id)
         if self.competition is not None:
-            self.label_text = ('<center>Competition:<br><strong>%s</strong><br>%8s<br>%s</center>' % (self.competition.name, self.get_formatted_date(self.competition.eventDate), self.competition.location))
+            self.label_text = ('<center>Competition:<br><strong>%s</strong>\
+                               <br>%8s<br>%s</center>' %
+                               (self.competition.name,
+                                self.get_formatted_date(
+                                    self.competition.eventDate),
+                                self.competition.location))
             self.label.setText(self.label_text)
             self.settings.last_comp = self.competition.id
-            # self.db.tables.settings.update(self.settings)
             return self.competition
         else:
             self.label_text = ('<center>No Competition Selected</center>')
@@ -191,9 +199,11 @@ class SMainWindow(qt.QMainWindow):
 
     def delete_competition(self):
         verity = verify('Are you sure you want to delete this competition?',
-                        'This will delete all data for the given competition. This cannot be undone.')
+                        'This will delete all data for the given competition.\
+                        This cannot be undone.')
         if verity:
-            #print('Will delete comp %d' % self.competition.id)
+            if self.db.settings.verbose:
+                print('Will delete comp %d' % self.competition.id)
             self.db.tables.competitions.remove(self.competition.id)
             self.competition = None
             self.select_competition()
@@ -205,13 +215,8 @@ class SMainWindow(qt.QMainWindow):
         print(f"Exit mw {self.app}")
         self.close()
         self.app.exit()
-        # sys.exit() # (self.app)
 
     def new_competition(self):
-        #id, name, description, eventDate, deadline, location, competitionType, isChampionship
-        # today = datetime.date.today()
-        # competition = sc.Competition(0,'','',today,today,'',0,0)
-        # self.competition = self.db.tables.competitions.insert(competition)
         self.competition = self.db.tables.competitions.new()
         self.edit_competition()
 
@@ -219,7 +224,6 @@ class SMainWindow(qt.QMainWindow):
 class App(qt.QApplication):
     def __init__(self, db):
         super().__init__(sys.argv)
-        # super(Interface, self).__init__()
         self.setObjectName("Scrutini")
         self.setApplicationDisplayName("Scrutini")
         self.main_window = SMainWindow(self, db)
