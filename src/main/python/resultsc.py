@@ -11,9 +11,9 @@ class ResultsGroupBox(qt.QGroupBox):
         self.db = db
         self.main_window = main_window
         self.main_window.setCentralWidget(self)
-        self.event = event
+        self.event = self.db.tables.events.get(event)
         self.layout = qt.QVBoxLayout()
-        self.scores = event.scores
+        self.scores = self.db.tables.scores.get_by_event(event)
         self.scores.sort(key=self.get_score_value, reverse=True)
         # How to calc/show results from multiple judges? xxx
         place = 1
@@ -96,7 +96,7 @@ class ResultsGroupBox(qt.QGroupBox):
                 self.placing_scores[score.dancer] = self.db.tables.place_values.get(4).points
                 self.placing[4] = score.dancer
             elif ((place == 5) and (score.score > 0)):
-                self.placing_scores[score.dancer] = db.tables.place_values.get(5).points
+                self.placing_scores[score.dancer] = self.db.tables.place_values.get(5).points
                 self.placing[5] = score.dancer
             elif ((place == 6) and (score.score > 0)):
                 self.placing_scores[score.dancer] = self.db.tables.place_values.get(6).points
@@ -143,13 +143,13 @@ class ResultsViewWindow(qt.QDialog):
         i=1
         n=1
         for event in self.events:
-            results_box = ResultsGroupBox(event.name, event.id)
+            results_box = ResultsGroupBox(event.name, event.id, self.db, self.main_window)
             #self.groupBox_scores_layout.addWidget(results_box)
             if (i%2==0):
-                self.groupBox_scores_layout.addWidget(results_box, n,1,1,1, qt.Qt.AlignRight)
+                self.groupBox_scores_layout.addWidget(results_box, n,1,1,1, qc.Qt.AlignRight)
                 n += 1
             else:
-                self.groupBox_scores_layout.addWidget(results_box, n,1,1,1,qt.Qt.AlignLeft)
+                self.groupBox_scores_layout.addWidget(results_box, n,1,1,1,qc.Qt.AlignLeft)
             self.print_label += ('%s::%s:: ::' % (event.name, results_box.get_print_label()))
             if (event.countsForOverall == 1):
                 #print(event.name)
@@ -247,14 +247,15 @@ class ResultsViewWindow(qt.QDialog):
         i = 1
         n = 1
         for event in self.events:
-            results_box = ResultsGroupBox(event.name, event.id)
+            results_box = ResultsGroupBox(event.name, event.id,
+                                          self.db, self.main_window)
             #self.groupBox_scores_layout.addWidget(results_box)
             results_box.sizeHint()
             if (i%2==0):
-                self.groupBox_scores_layout.addWidget(results_box, n,1,1,1, qt.Qt.AlignRight)
+                self.groupBox_scores_layout.addWidget(results_box, n,1,1,1, qc.Qt.AlignRight)
                 n += 1
             else:
-                self.groupBox_scores_layout.addWidget(results_box, n,1,1,1,qt.Qt.AlignLeft)
+                self.groupBox_scores_layout.addWidget(results_box, n,1,1,1,qc.Qt.AlignLeft)
             self.print_label += ('%s::%s:: ::' % (event.name, results_box.get_print_label()))
             if (event.countsForOverall == 1):
                 #print(event.name)

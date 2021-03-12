@@ -131,6 +131,7 @@ class Tables:
         self.dances = TableDances(db)
         self.events = TableEvents(db)
         self.place_values = TablePlaceValues(db)
+        self.scores = TableScores(db)
 
 
 class TableCompetitionTypes:

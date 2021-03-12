@@ -2,6 +2,7 @@ import classes as sc
 import PyQt5.QtWidgets as qt
 import PyQt5.QtCore as qc
 import PyQt5.QtGui as qg
+from resultsc import ResultsGroupBox
 
 
 class ScoreEntryWindow(qt.QDialog):
@@ -33,7 +34,7 @@ class ScoreEntryWindow(qt.QDialog):
             self.selector_judge.addItem('%s %s' % (judge.firstName, judge.lastName))
             self.judge_ids.append(judge.id)
         self.table_scores = qt.QTableWidget()
-        self.headers = ['Num','Score','id']
+        self.headers = ['Num', 'Score', 'id']
         self.table_scores.setColumnCount(len(self.headers))
         self.table_scores.setHorizontalHeaderLabels(self.headers)
         self.column_widths = [60,80,0]
@@ -46,7 +47,7 @@ class ScoreEntryWindow(qt.QDialog):
         self.scores = {}
         for dancer in self.dancers:
             item_dancer_num = qt.QTableWidgetItem(dancer.number)
-            item_dancer_num.setFlags(qt.Qt.NoItemFlags)
+            item_dancer_num.setFlags(qc.Qt.NoItemFlags)
             if self.db.tables.scores.exists_for_event(self.event.id):
                 score = self.db.tables.scores.get_by_event_dancer(self.event.id, dancer.id)
                 if score is not None:
@@ -68,7 +69,7 @@ class ScoreEntryWindow(qt.QDialog):
         #xxx is there a way to make a column unselectable? If so, make the dancer_num column such
         self.table_scores.itemChanged.connect(self.item_changed)
 
-        self.results_box = ResultsGroupBox('Results:', self.event.id)
+        self.results_box = ResultsGroupBox('Results:', self.event.id, self.db, self.main_window)
 
         self.button_save = qt.QPushButton('&Save')
         self.button_save.clicked.connect(self.save_button)
@@ -101,14 +102,14 @@ class ScoreEntryWindow(qt.QDialog):
         elif (saveResult == 'cancel'):
             self.selector_event.setCurrentIndex(self.previous_event)
             return
-        self.event = self.db.table.events.get(self.event_ids[self.selector_event.currentIndex()])
+        self.event = self.db.tables.events.get(self.event_ids[self.selector_event.currentIndex()])
         self.previous_event = self.selector_event.currentIndex()
         row = 0
         self.dancers = self.db.tables.dancers.get_ordered_by_number(self.event.dancerGroup)
         self.scores = {}
         for dancer in self.dancers:
             item_dancer_num = qt.QTableWidgetItem(dancer.number)
-            item_dancer_num.setFlags(qt.Qt.NoItemFlags)
+            item_dancer_num.setFlags(qc.Qt.NoItemFlags)
             if self.db.tables.scores.exists_for_event(self.event.id):
                 score = self.db.tables.scores.get_by_event_dancer(self.event.id, dancer.id)
                 if score is not None:
@@ -130,6 +131,7 @@ class ScoreEntryWindow(qt.QDialog):
         self.changes_made = False
 
     def save_button(self, sender=None):
+        self.table_scores.setFocus()
         row = 0
         judge_id = (self.judge_ids[self.selector_judge.currentIndex()])
         if (self.competition.competitionType > 0):
@@ -143,12 +145,12 @@ class ScoreEntryWindow(qt.QDialog):
                 #print ('[%6.2f]' % float(item_dancer_score.text()))
                 dancer_id = int(item_dancer_id.text())
                 dancer_score = float(item_dancer_score.text())
-                score = Score(0, dancer_id, self.event.id, judge_id,
+                score = sc.Score(0, dancer_id, self.event.id, judge_id,
                               self.event.competition, dancer_score)
                 score = self.db.tables.scores.insert(score)
                 #id, dancer, event, judge, competition, score
             row += 1
-        #xxxs needs to take judge into account for championships
+        # xxxs needs to take judge into account for championships
         self.changes_made = False
         self.results_box.select_event(self.event.id)
 
