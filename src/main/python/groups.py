@@ -21,7 +21,6 @@ class GroupEditor(qt.QDialog):
         self.label_name = qt.QLabel('Group Name:')
         self.field_name = qt.QLineEdit(self.dancerGroup.name)
         self.label_abbrev = qt.QLabel('Abbreviation:')
-        print(self.dancerGroup.abbrev)
         self.field_abbrev = qt.QLineEdit(self.dancerGroup.abbrev)
         self.label_ageMin = qt.QLabel('Minimum Age:')
         self.field_ageMin = qt.QLineEdit('%d' % self.dancerGroup.ageMin)

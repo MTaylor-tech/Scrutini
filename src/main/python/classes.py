@@ -82,6 +82,18 @@ class CompetitionType:
         self.isChampionship = isChampionship
         self.isProtected = isProtected
 
+    def __str__(self):
+        if self.isChampionship:
+            champ = "Yes"
+        else:
+            champ = "No"
+        if self.isProtected:
+            protect = "Yes"
+        else:
+            protect = "No"
+        return f"{self.id}: {self.name} [{self.abbrev}], Championship?\
+                {champ}, Protected from Deletion? {protect}"
+
 
 class Competition:
     def __init__(self, id, name, description, eventDate, deadline, location,
@@ -96,22 +108,51 @@ class Competition:
         self.competitionType = competitionType
         self.isChampionship = isChampionship
 
+    def __str__(self):
+        if self.isChampionship:
+            champ = "Yes"
+        else:
+            champ = "No"
+        return f"{self.id}: {self.name}, {self.location}, {self.eventDate},\
+                Championship? {champ}"
 
-# Dance Categories are groups of dances to help organize what dances each competition includes
+
 class Category:
     def __init__(self, id, name):
+        """Category
+
+        Dance Categories are groups of dances to help organize what dances
+        each competition includes
+        """
         self.id = id
         self.name = name
 
-# Dances are names of dances and special trophies that can be chosen for an event
+    def __str__(self):
+        return f"{self.id}: {self.name}"
+
+
 class Dance:
     def __init__(self, id, name):
+        """Dance
+
+        Dances are names of dances and special trophies that can be chosen for
+        an event
+        """
         self.id = id
         self.name = name
 
-# Events are dances and special trophies at a particular competition which can award medals
+    def __str__(self):
+        return f"{self.id}: {self.name}"
+
+
 class Event:
-    def __init__(self, id, name, dancerGroup, dance, competition, countsForOverall, numPlaces, earnsStamp):
+    def __init__(self, id, name, dancerGroup, dance, competition,
+                 countsForOverall, numPlaces, earnsStamp):
+        """Event
+
+        Events are dances and special trophies at a particular competition
+        which can award medals
+        """
         self.id = id
         self.name = name
         self.dancerGroup = dancerGroup
@@ -121,25 +162,60 @@ class Event:
         self.numPlaces = numPlaces
         self.earnsStamp = earnsStamp
 
-# Dancer Categories are Primary, Beginner, Novice, Intermediate, Premier
+    def __str__(self):
+        if self.earnsStamp:
+            stamp = "Yes"
+        else:
+            stamp = "No"
+        if self.countsForOverall:
+            overall = "Yes"
+        else:
+            overall = "No"
+        return f"{self.id}: {self.name}, Counts for overall? {overall},\
+                Earns a Stamp? {stamp}"
+
+
 class DancerCat:
     def __init__(self, id, name, abbrev, protected=True):
+        """DancerCat
+
+        Dancer Categories are Primary, Beginner, Novice, Intermediate, Premier
+        """
         self.id = id
         self.abbrev = abbrev
         self.name = name
         self.protected = protected
 
+    def __str__(self):
+        if self.protected:
+            protect = "Yes"
+        else:
+            protect = "No"
+        return f"{self.id}: {self.name} [{self.abbrev}], Protected from\
+                deletion? {protect}"
 
-# PlaceValues are the point values of placing in a dance
+
 class PlaceValue:
     def __init__(self, place, points):
+        """PlaceValue
+
+        PlaceValues are the point values of placing in a dance
+        """
         self.place = place
         self.points = points
 
-# Dancer Groups are age groupings within the Dancer Categories
-# Additional Dancer Groups can be made that are for special awards
+    def __str__(self):
+        return f"Place: {self.place}, worth {self.points} points"
+
+
 class DancerGroup:
-    def __init__(self, id, name, abbrev, ageMin, ageMax, dancerCat, competition):
+    def __init__(self, id, name, abbrev, ageMin, ageMax, dancerCat,
+                 competition):
+        """DancerGroup
+
+        Dancer Groups are age groupings within the Dancer Categories
+        Additional Dancer Groups can be made that are for special awards
+        """
         self.id = id
         self.name = name
         self.ageMin = ageMin
@@ -148,11 +224,20 @@ class DancerGroup:
         self.competition = competition
         self.abbrev = abbrev
 
-# Dancers are individual competitors
+    def __str__(self):
+        return f"{self.id}: {self.name} [{self.abbrev}], Ages:\
+                {self.ageMin}-{self.ageMax}"
 
 
 class Dancer:
-    def __init__(self, id, firstName, lastName, scotDanceNum, street, city, state, zipCode, birthdate, age, registeredDate, number, phonenum, email, teacher, teacherEmail, dancerCat, dancerGroup, competition):
+    def __init__(self, id, firstName, lastName, scotDanceNum, street, city,
+                 state, zipCode, birthdate, age, registeredDate, number,
+                 phonenum, email, teacher, teacherEmail, dancerCat,
+                 dancerGroup, competition):
+        """Dancer
+
+        Dancers are individual competitors
+        """
         self.id = id
         self.firstName = firstName
         self.lastName = lastName
@@ -173,21 +258,39 @@ class Dancer:
         self.dancerGroup = dancerGroup
         self.competition = competition
 
-# Judges
+    def __str__(self):
+        return f"{self.id}: [#{self.num}] {self.firstName} {self.lastName}"
+
+
 class Judge:
     def __init__(self, id, firstName, lastName, competition):
+        """Judge
+
+        Just the name of the Judge and the connection to the competition
+        """
         self.id = id
         self.firstName = firstName
         self.lastName = lastName
         self.competition = competition
 
+    def __str__(self):
+        return f"{self.id}: {self.firstName} {self.lastName}"
 
-# Scores are individual scores for individual competitors in individual events from individual judges
+
 class Score:
     def __init__(self, id, dancer, event, judge, competition, score):
+        """Score
+
+        Scores are individual scores for individual competitors in
+        individual events from individual judges
+        """
         self.id = id
         self.dancer = dancer
         self.event = event
         self.judge = judge
         self.competition = competition
         self.score = score
+
+    def __str__(self):
+        return f"{self.id}: Dancer ID: {self.dancer} in Event: {self.event}\
+                Earned a score of {self.score} from Judge ID: {self.judge}"
