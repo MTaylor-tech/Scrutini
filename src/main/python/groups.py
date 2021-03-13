@@ -43,10 +43,11 @@ class GroupEditor(qt.QDialog):
             if dancer is not None:
                 self.dancer_ids.append(dancer.id)
         self.table_dancers = qt.QTableWidget()
-        self.headers = ['', 'Num', 'First Name', 'Last Name', 'id']
+        self.headers = ['', 'Num', 'First Name', 'Last Name', 'id',
+                        'Category', 'Age']
         self.table_dancers.setColumnCount(len(self.headers))
         self.table_dancers.setHorizontalHeaderLabels(self.headers)
-        self.column_widths = [20, 40, 120, 150, 0]
+        self.column_widths = [20, 40, 120, 150, 0, 100, 20]
         all_dancers = self.db.tables.dancers\
             .get_by_competition(self.dancerGroup.competition)
         column = 0
@@ -55,11 +56,14 @@ class GroupEditor(qt.QDialog):
                                               self.column_widths[column])
             column += 1
         row = 0
+        cats = self.db.tables.categories.get_all()
         for dancer in all_dancers:
             if dancer is not None:
                 item_first_name = qt.QTableWidgetItem(dancer.firstName)
                 item_last_name = qt.QTableWidgetItem(dancer.lastName)
                 item_number = qt.QTableWidgetItem(dancer.number)
+                item_age = qt.QTableWidgetItem(dancer.age)
+                item_cat = qt.QTableWidgetItem(cats[dancer.dancerCat].name)
                 checkbox_in_group = qt.QCheckBox()
                 if dancer.id in self.dancer_ids:
                     checkbox_in_group.setCheckState(2)
@@ -74,6 +78,8 @@ class GroupEditor(qt.QDialog):
                 self.table_dancers.setItem(row, 2, item_first_name)
                 self.table_dancers.setItem(row, 3, item_last_name)
                 self.table_dancers.setItem(row, 4, item_dancer_id)
+                self.table_dancers.setItem(row, 5, item_cat)
+                self.table_dancers.setItem(row, 6, item_age)
 
                 row += 1
 
@@ -348,9 +354,17 @@ class GroupMenu(qt.QDialog):
         self.layout.addWidget(qt.QLabel('Choose a Competitor Group:'))
         self.dancerGroups = self.db.tables.groups.get_by_competition(comp_id)
         self.dgButtons = []
+        cats = self.db.tables.categories.get_all()
         for dancerGroup in self.dancerGroups:
-            dgButton = SPushButton(('[%s] %s' % (dancerGroup.abbrev,
-                                                 dancerGroup.name)),
+            if dancerGroup.ageMax >= 99:
+                aMax = '+'
+            else:
+                aMax = f"-{dancerGroup.ageMax}"
+            dgButton = SPushButton(('[%s] %s (%s %d%s)' %
+                                    (dancerGroup.abbrev.replace('&', '&&'),
+                                     dancerGroup.name.replace('&', '&&'),
+                                     cats[dancerGroup.dancerCat].abbrev,
+                                     dancerGroup.ageMin, aMax)),
                                    self, dancerGroup.id, self.set_dancer_group)
             dgButton.clicked.connect(dgButton.on_button_clicked)
             self.dgButtons.append(dgButton)

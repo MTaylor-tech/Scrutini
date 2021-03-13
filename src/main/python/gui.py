@@ -5,6 +5,7 @@ import PyQt5.QtWidgets as qt
 # from fbs_runtime.application_context.PyQt5 import ApplicationContext
 import PyQt5.QtCore as qc
 import PyQt5.QtGui as qg
+# from PyQt5.QtGui import qt_set_sequence_auto_mnemonic
 from sWidgets import SPushButton, on_button_clicked, verify, ask_save, is_float
 from resultsc import ResultsViewWindow  # ResultsGroupBox
 from scores import ScoreEntryWindow
@@ -38,17 +39,18 @@ class SMainWindow(qt.QMainWindow):
         self.statusBar()
         self.statusBar().show()
         menubar = qt.QMenuBar(self)
-        # menubar.setNativeMenuBar(False)  # True means menubar in upper
+        menubar.setNativeMenuBar(False)  # True means menubar in upper
         exitAct = qt.QAction(' &Quit', self)
         exitAct.setShortcut('Ctrl+Q')
         exitAct.setStatusTip('Exit Application')
         exitAct.triggered.connect(self.exit_app)
         fileMenu = menubar.addMenu(' &File')
         fileMenu.addAction(exitAct)
-        changeCompAct = qt.QAction(' &Select Competition',self)
-        changeCompAct.setStatusTip('Choose a different competition or make a new one')
+        changeCompAct = qt.QAction(' Select Competition', self)
+        changeCompAct.setStatusTip('Choose a different competition or make a\
+                                    new one')
         changeCompAct.triggered.connect(self.select_competition)
-        editCompAct = qt.QAction(' &Edit Competition',self)
+        editCompAct = qt.QAction(' &Edit Competition', self)
         editCompAct.setStatusTip('Edit Competition Details')
         editCompAct.triggered.connect(self.edit_competition)
         compMenu = menubar.addMenu(' &Competition')
@@ -95,36 +97,50 @@ class SMainWindow(qt.QMainWindow):
         return layout
 
     def enter_scores(self, sender=None):
+        if self.centralWidget() is not None:
+            self.centralWidget().hide()
         scoreEntryWindow = ScoreEntryWindow(self, self.competition.id, self.db)
         scoreEntryWindow.show()
         scoreEntryWindow.exec_()
 
     def view_scores(self, sender=None):
+        if self.centralWidget() is not None:
+            self.centralWidget().hide()
         resultsViewWindow = ResultsViewWindow(self, self.competition.id, self.db)
         resultsViewWindow.show()
         resultsViewWindow.exec_()
 
     def import_csv(self, sender=None):
+        if self.centralWidget() is not None:
+            self.centralWidget().hide()
         importWindow = ImportWindow(self, self.competition.id, self.db)
         importWindow.show()
         importWindow.exec_()
 
     def edit_dancers(self):
+        if self.centralWidget() is not None:
+            self.centralWidget().hide()
         dancerEditor = DancerEditor(self, self.competition.id, self.db)
         dancerEditor.show()
         dancerEditor.exec_()
 
     def edit_judges(self):
+        if self.centralWidget() is not None:
+            self.centralWidget().hide()
         judgeSelector = JudgeSelector(self, self.competition.id, self.db)
         judgeSelector.show()
         judgeSelector.exec_()
 
     def edit_competition(self):
+        if self.centralWidget() is not None:
+            self.centralWidget().hide()
         compEditor = CompetitionEditor(self, self.competition.id, self.db)
         compEditor.show()
         compEditor.exec_()
 
     def edit_dancerGroup(self, dancerGroup):
+        if self.centralWidget() is not None:
+            self.centralWidget().hide()
         dgEditor = DancerGroupEditor(self, dancerGroup, self.db)
         dgEditor.show()
         dgEditor.exec_()
@@ -188,11 +204,15 @@ class SMainWindow(qt.QMainWindow):
             return None
 
     def select_dancerGroup(self):
+        if self.centralWidget() is not None:
+            self.centralWidget().hide()
         window = DancerGroupMenu(self, self.competition.id, self.db)
         window.show()
         window.exec_()
 
     def select_competition(self):
+        if self.centralWidget() is not None:
+            self.centralWidget().hide()
         window = CompetitionSelector(self)
         window.show()
         window.exec_()
@@ -212,6 +232,8 @@ class SMainWindow(qt.QMainWindow):
 
     def exit_app(self, sender):
         self.db.close_connection()
+        if self.centralWidget() is not None:
+            self.centralWidget().hide()
         print(f"Exit mw {self.app}")
         self.close()
         self.app.exit()
@@ -224,6 +246,7 @@ class SMainWindow(qt.QMainWindow):
 class App(qt.QApplication):
     def __init__(self, db):
         super().__init__(sys.argv)
+        qg.qt_set_sequence_auto_mnemonic(True)
         self.setObjectName("Scrutini")
         self.setApplicationDisplayName("Scrutini")
         self.main_window = SMainWindow(self, db)

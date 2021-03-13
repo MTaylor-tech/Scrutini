@@ -5,12 +5,12 @@ import PyQt5.QtWidgets as qt
 import PyQt5.QtCore as qc
 import PyQt5.QtGui as qg
 
+
 class ResultsGroupBox(qt.QGroupBox):
     def __init__(self, text, event, db, main_window):
         super(ResultsGroupBox, self).__init__(text)
         self.db = db
         self.main_window = main_window
-        self.main_window.setCentralWidget(self)
         self.event = self.db.tables.events.get(event)
         self.layout = qt.QVBoxLayout()
         self.scores = self.db.tables.scores.get_by_event(event)
