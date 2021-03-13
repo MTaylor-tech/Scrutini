@@ -13,7 +13,7 @@ class CompetitionEditor(qt.QDialog):
         if self.db.settings.verbose:
             print("CompetitionEditor in competitions.py")
         self.main_window = main_window
-        self.main_window.setCentralWidget(self)
+        # self.main_window.setCentralWidget(self)
         self.competition = self.db.tables.competitions.get(comp_id)
         self.changes_made = False
         self.layout = qt.QVBoxLayout()
@@ -58,7 +58,7 @@ class CompetitionEditor(qt.QDialog):
         self.layout.addWidget(self.selector_compType)
         self.layout.addWidget(self.button_save)
         self.layout.addWidget(self.button_exit)
-        self.setWindowModality(qc.Qt.ApplicationModal)
+        # self.setWindowModality(qc.Qt.ApplicationModal)
         self.setLayout(self.layout)
 
     def save(self):
@@ -88,7 +88,6 @@ class CompetitionEditor(qt.QDialog):
             pass
 
     def item_changed(self, sender=None):
-        print('Item changed')
         self.changes_made = True
 
 
@@ -103,7 +102,10 @@ class CompetitionSelector(qt.QDialog):
         self.competitions = self.main_window.db.tables.competitions.get_all()
         self.compButtons = []
         for comp in self.competitions:
-            compButton = SPushButton('%s (%s)' % (comp.name, self.get_formatted_date(comp.eventDate)),self,comp.id,self.set_competition)
+            compButton = SPushButton('%s (%s)' % (comp.name,
+                                      self.get_formatted_date(comp.eventDate)),
+                                      self,comp.id,
+                                      self.set_competition)
             compButton.clicked.connect(compButton.on_button_clicked)
             self.compButtons.append(compButton)
         for compButton in self.compButtons:

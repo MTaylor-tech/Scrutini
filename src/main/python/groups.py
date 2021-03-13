@@ -62,7 +62,12 @@ class GroupEditor(qt.QDialog):
                 item_first_name = qt.QTableWidgetItem(dancer.firstName)
                 item_last_name = qt.QTableWidgetItem(dancer.lastName)
                 item_number = qt.QTableWidgetItem(dancer.number)
-                item_age = qt.QTableWidgetItem(dancer.age)
+                if type(dancer.age) == int:
+                    item_age = qt.QTableWidgetItem(('%d' % dancer.age))
+                elif dancer.age is not None:
+                    item_age = qt.QTableWidgetItem(dancer.age)
+                else:
+                    item_age = qt.QTableWidgetItem('')
                 item_cat = qt.QTableWidgetItem(cats[dancer.dancerCat].name)
                 checkbox_in_group = qt.QCheckBox()
                 if dancer.id in self.dancer_ids:

@@ -12,46 +12,48 @@ class DancerEditor(qt.QDialog):
         self.comp_id = comp_id
         self.db = db
         self.changes_made = False
-        self.resize(1680,1000)
+        self.resize(1680, 1000)
         self.layout = qt.QVBoxLayout()
         self.dancers = self.db.tables.dancers.get_by_competition(comp_id)
         self.table_dancers = qt.QTableWidget()
-        self.headers = ['First Name','Last Name','Num','Category','Groups','ScotDance#','Address','City','ST','Zip Code','Birthdate','Age','Entry Rcvd','Phone #','Email','Teacher','Teacher\'s Email','id','cat_id']
+        self.headers = ['First Name', 'Last Name', 'Num', 'Category',
+                        'Groups', 'ScotDance#', 'Address', 'City', 'ST',
+                        'Zip Code', 'Birthdate', 'Age', 'Entry Rcvd',
+                        'Phone #', 'Email', 'Teacher', 'Teacher\'s Email',
+                        'id', 'cat_id']
         self.table_dancers.setColumnCount(len(self.headers))
         self.table_dancers.setHorizontalHeaderLabels(self.headers)
-        self.column_widths = [120,150,40,130,100,100,150,120,40,60,80,30,80,110,250,200,250,0,0]
+        self.column_widths = [120, 150, 40, 130, 100, 100, 150, 120, 40, 60,
+                              80, 30, 80, 110, 250, 200, 250, 0, 0]
         column = 0
         while column < len(self.column_widths):
-            self.table_dancers.setColumnWidth(column,self.column_widths[column])
+            self.table_dancers.setColumnWidth(column,
+                                              self.column_widths[column])
             column += 1
         row = 0
-        #id, firstName, lastName, scotDanceNum, street, city, state, zipCode, birthdate, age, registeredDate,
-        #number, phonenum, email, teacher, teacherEmail, dancerCat, dancerGroup, competition
+        # id, firstName, lastName, scotDanceNum, street, city, state,
+        # zipCode, birthdate, age, registeredDate, number, phonenum, email,
+        # teacher, teacherEmail, dancerCat, dancerGroup, competition
         for dancer in self.dancers:
             item_first_name = qt.QTableWidgetItem(dancer.firstName)
             item_last_name = qt.QTableWidgetItem(dancer.lastName)
             item_number = qt.QTableWidgetItem(dancer.number)
-
             selector_dancerCat = qt.QComboBox()
             dancerCats = self.db.tables.categories.get_all()
             for dancerCat in dancerCats:
                 selector_dancerCat.addItem(dancerCat.name)
-                #print('Category: %d [%s]' % (dancerCat.id, dancerCat.name))
+                if self.db.settings.verbose:
+                    print('Category: %d [%s]' % (dancerCat.id, dancerCat.name))
             if dancer.dancerCat is not None:
                 selector_dancerCat.setCurrentIndex(dancer.dancerCat)
             else:
                 selector_dancerCat.setCurrentIndex(0)
-
-
             dancerCat = self.db.tables.categories.get(dancer.dancerCat)
-            if dancerCat is not None:
-                dancerCat_name = dancerCat.name
-            else:
-                dancerCat_name = ''
-            item_cat = qt.QTableWidgetItem(dancerCat_name)
+            # if dancerCat is not None:
+            #     dancerCat_name = dancerCat.name
+            # else:
+            #     dancerCat_name = ''
             item_cat_id = qt.QTableWidgetItem(dancer.dancerCat)
-
-
             dancer_groups = self.db.tables.groups.get_by_dancer(dancer.id)
             dancer_group_list = ''
             for group in dancer_groups:
@@ -95,7 +97,6 @@ class DancerEditor(qt.QDialog):
             self.table_dancers.setItem(row,  0, item_first_name)
             self.table_dancers.setItem(row,  1, item_last_name)
             self.table_dancers.setItem(row,  2, item_number)
-            #self.table_dancers.setItem(row,  3, item_cat)
             self.table_dancers.setCellWidget(row, 3, selector_dancerCat)
             self.table_dancers.setItem(row,  4, item_groups)
             self.table_dancers.setItem(row,  5, item_scotdance)
@@ -114,8 +115,8 @@ class DancerEditor(qt.QDialog):
             self.table_dancers.setItem(row, 18, item_cat_id)
 
             row += 1
-        self.table_dancers.setColumnHidden(17,True)
-        self.table_dancers.setColumnHidden(18,True)
+        self.table_dancers.setColumnHidden(17, True)
+        self.table_dancers.setColumnHidden(18, True)
         self.table_dancers.setSortingEnabled(True)
         self.table_dancers.itemChanged.connect(self.item_changed)
         self.layout.addWidget(self.table_dancers)
@@ -154,10 +155,10 @@ class DancerEditor(qt.QDialog):
 
     def new_dancer(self, sender=None):
         row = self.table_dancers.rowCount()
-        #id, firstName, lastName, scotDanceNum, street, city, state, zipCode,
-        #birthdate, age, registeredDate, number, phonenum, email, teacher, teacherEmail, dancerCat, dancerGroup, competition
-        dancer = sc.Dancer(0,'','','','','','','','',0,'','','','','','',0,0,self.comp_id)
-        dancer = self.db.tables.dancers.insert(dancer)
+        # id, firstName, lastName, scotDanceNum, street, city, state, zipCode,
+        # birthdate, age, registeredDate, number, phonenum, email, teacher,
+        # teacherEmail, dancerCat, dancerGroup, competition
+        dancer = self.db.tables.dancers.new()
         self.table_dancers.insertRow(row)
         item_first_name = qt.QTableWidgetItem(dancer.firstName)
         item_last_name = qt.QTableWidgetItem(dancer.lastName)
@@ -167,21 +168,19 @@ class DancerEditor(qt.QDialog):
         dancerCats = self.db.tables.categories.get_all()
         for dancerCat in dancerCats:
             selector_dancerCat.addItem(dancerCat.name)
-            #print('Category: %d [%s]' % (dancerCat.id, dancerCat.name))
+            if self.db.settings.verbose:
+                print('Category: %d [%s]' % (dancerCat.id, dancerCat.name))
         if dancer.dancerCat is not None:
             selector_dancerCat.setCurrentIndex(dancer.dancerCat)
         else:
             selector_dancerCat.setCurrentIndex(0)
-
-
         dancerCat = self.db.tables.categories.get(dancer.dancerCat)
         if dancerCat is not None:
             dancerCat_name = dancerCat.name
         else:
             dancerCat_name = ''
-        item_cat = qt.QTableWidgetItem(dancerCat_name)
+        # item_cat = qt.QTableWidgetItem(dancerCat_name)
         item_cat_id = qt.QTableWidgetItem(dancer.dancerCat)
-
 
         dancer_groups = self.db.tables.groups.get_by_dancer(dancer.id)
         dancer_group_list = ''
@@ -196,11 +195,6 @@ class DancerEditor(qt.QDialog):
         item_city = qt.QTableWidgetItem(dancer.city)
         item_state = qt.QTableWidgetItem(dancer.state)
         item_zipCode = qt.QTableWidgetItem(dancer.zipCode)
-
-        #if ((dancer.birthdate != '') and (dancer.birthdate != None)):
-        #    item_birthdate = QTableWidgetItem(self.get_formatted_date(dancer.birthdate))
-        #else:
-        #    item_birthdate = QTableWidgetItem('')
         item_birthdate = qt.QTableWidgetItem(dancer.birthdate)
 
         if type(dancer.age) == int:
@@ -209,11 +203,6 @@ class DancerEditor(qt.QDialog):
             item_age = qt.QTableWidgetItem(dancer.age)
         else:
             item_age = qt.QTableWidgetItem('')
-
-        # if ((dancer.registeredDate != '') and (dancer.registeredDate != None)):
-        #    item_entryrcvd = QTableWidgetItem(self.get_formatted_date(dancer.registeredDate))
-        # else:
-        #    item_entryrcvd = QTableWidgetItem('')
         item_entryrcvd = qt.QTableWidgetItem(dancer.registeredDate)
 
         item_phonenum = qt.QTableWidgetItem(dancer.phonenum)
@@ -225,7 +214,6 @@ class DancerEditor(qt.QDialog):
         self.table_dancers.setItem(row,  0, item_first_name)
         self.table_dancers.setItem(row,  1, item_last_name)
         self.table_dancers.setItem(row,  2, item_number)
-        # self.table_dancers.setItem(row,  3, item_cat)
         self.table_dancers.setCellWidget(row, 3, selector_dancerCat)
         self.table_dancers.setItem(row,  4, item_groups)
         self.table_dancers.setItem(row,  5, item_scotdance)

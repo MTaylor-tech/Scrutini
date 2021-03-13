@@ -6,6 +6,7 @@ from db import SCDatabase
 from classes import Settings
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
+
 # initiate the parser
 parser = argparse.ArgumentParser()
 parser.add_argument("-i0", "--interface0",
@@ -49,6 +50,8 @@ if __name__ == "__main__":
         # scruinterface.print_settings()
         # scruinterface.menu_main()
     else:
+        # import pdb
+        # pdb.set_trace()
         g = gui.App(scrudb)
         g.start()
     rc = appctxt.app.exec_()
