@@ -23,7 +23,7 @@ class SMainWindow(qt.QMainWindow):
         label_text = ''
         self.label = qt.QLabel(label_text)
         self.toolbar = self.addToolBar(qc.Qt.LeftToolBarArea, self.tool_bar())
-        self.setUnifiedTitleAndToolBarOnMac(True)
+        # self.setUnifiedTitleAndToolBarOnMac(True)
         self.app = interface
         self.db = db
         # self.app = PyQtApp()
@@ -31,6 +31,7 @@ class SMainWindow(qt.QMainWindow):
         self.setWindowIcon(qg.QIcon("../icons/base/64.png"))
         self.setGeometry(0, 0, 1200, 800)
         self.settings = db.settings
+        self.competition = None
         # self.competition = sc.Competition(0,'','',None,None,'',None)
         self.competition = self.retrieve_competition()
         self.set_competition(self.competition.id)
@@ -106,7 +107,8 @@ class SMainWindow(qt.QMainWindow):
     def view_scores(self, sender=None):
         if self.centralWidget() is not None:
             self.centralWidget().hide()
-        resultsViewWindow = ResultsViewWindow(self, self.competition.id, self.db)
+        resultsViewWindow = ResultsViewWindow(self, self.competition.id,
+                                              self.db)
         resultsViewWindow.show()
         resultsViewWindow.exec_()
 
@@ -184,8 +186,11 @@ class SMainWindow(qt.QMainWindow):
             return self.competition
         else:
             self.select_competition()
-            self.settings.last_comp = self.competition.id
-            return self.competition
+            if self.competition is not None:
+                self.settings.last_comp = self.competition.id
+                return self.competition
+            else:
+                return self.new_competition()
 
     def set_competition(self, comp_id):
         self.competition = self.db.tables.competitions.get(comp_id)
@@ -241,6 +246,7 @@ class SMainWindow(qt.QMainWindow):
     def new_competition(self):
         self.competition = self.db.tables.competitions.new()
         self.edit_competition()
+        return self.competition
 
 
 class App(qt.QApplication):
@@ -252,12 +258,10 @@ class App(qt.QApplication):
         self.main_window = SMainWindow(self, db)
 
     def start(self):
-        # pass
         self.main_window.show()
-        # self.main_window.app.show()
 
     def exit(self):
         # rc = self.exec_()
         print("Exit Interface")
         self.closeAllWindows()
-        sys.exit()
+        sys.exit(0)

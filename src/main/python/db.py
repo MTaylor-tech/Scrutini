@@ -201,7 +201,7 @@ class TableCompetitions:
 
     def new(self):
         today = datetime.date.today()
-        competition = sc.Competition(0, '' ,'' ,today, today, '', 0, 0)
+        competition = sc.Competition(0, '', '', today, today, '', 0, 0)
         return self.insert(competition)
 
     def insert(self, comp):
@@ -332,6 +332,16 @@ class TableGroups:
         else:
             return None
 
+    def get_by_name(self, name):
+        """Return a single DancerGroup specified by name"""
+        self.cursor.execute('select * from dancerGroups where name = \"%s\"'
+                            % name)
+        result = self.cursor.fetchone()
+        if result is not None:
+            return sc.DancerGroup(*result)
+        else:
+            return None
+
     def get_by_dancer(self, id):
         """Return a list of all DancerGroups a Dancer is in"""
         self.cursor.execute('select dancer, dancerGroup from dancerGroupJoin\
@@ -345,6 +355,31 @@ class TableGroups:
             return groups
         else:
             return None
+
+    def get_or_new(self, comp_id, g_string):
+        """Look for an existing DancerGroup, but make a new one if not found"""
+        if self.get_by_abbrev(g_string) is not None:
+            return self.get_by_abbrev(g_string)
+        elif self.get_by_name(g_string) is not None:
+            return self.get_by_name(g_string)
+        else:
+            dancer_group = self.new(comp_id)
+            dancer_group.name = g_string
+            a_string = g_string[:3]
+            got_it = False
+            i = 0
+            while not got_it:
+                if self.get_by_abbrev(a_string) is None:
+                    got_it = True
+                else:
+                    if i < 1:
+                        i = 1
+                        a_string = f"{a_string}{i}"
+                    else:
+                        i += 1
+                        a_string = f"{a_string[:-1]}{i}"
+            dancer_group.abbrev = a_string
+            return self.update(dancer_group)
 
     def new(self, comp_id):
         dancerGroup = sc.DancerGroup(0, '', '', 4, 99, 0, comp_id)
@@ -723,6 +758,15 @@ class TableCategories:
 
     def get(self, id):
         self.cursor.execute('select * from dancerCats where id = %d' % int(id))
+        result = self.cursor.fetchone()
+        if result is not None:
+            return sc.DancerCat(*result)
+        else:
+            return None
+
+    def get_by_name(self, cname):
+        self.cursor.execute('select * from dancerCats where name like \"%%%s\"'
+                            % cname)
         result = self.cursor.fetchone()
         if result is not None:
             return sc.DancerCat(*result)
