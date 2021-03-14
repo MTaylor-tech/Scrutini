@@ -16,6 +16,7 @@ parser.add_argument("-i1", "--interface1",
 parser.add_argument("-v", "--verbose", help="Prints extra information to the\
                      command line", action="store_true")
 parser.add_argument("-s", "--settings", help="Use the specified config file.")
+parser.add_argument("-db", "--database", help="Use the specified database.")
 # read arguments from the command line
 args = parser.parse_args()
 # check for Verbose
@@ -41,6 +42,8 @@ if __name__ == "__main__":
     appctxt = ApplicationContext()
     import sys
     settings = Settings(SETTINGS_FILE, VERBOSE)
+    if args.database and os.path.exists(args.database):
+        settings.db_file = args.database
     if VERBOSE:
         print(settings)
     scrudb = SCDatabase(settings)

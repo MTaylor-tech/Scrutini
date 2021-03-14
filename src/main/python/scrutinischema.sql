@@ -1,5 +1,5 @@
 /*  Schema for Scrutini
-    Schema Version 0.02
+    Schema Version 0.03
 */
 
 -- Competition Types include Regular, Championship, and Premiership and defines how scoring is done and number of judges
@@ -7,9 +7,15 @@ create table competitionTypes (
 	id			integer primary key	autoincrement not null,
 	name		text,
 	abbrev		text,
-	isChampionship	integer,
+	championship	integer,
 	protected 	integer
 );
+
+insert into competitionTypes (
+	name, abbrev, championship, protected
+) values ('Regular', 'Reg', 0, 1), (
+					'Championship', 'Champ', 1, 1), (
+					'Premiership', 'Prem', 1, 1);
 
 -- Competitions
 create table competitions (
@@ -35,11 +41,25 @@ create table dances (
     name        text
 );
 
+insert into dances (name) values
+	('Dance/Award'), ('Highland Fling'), ('Sword Dance'), ('Sean Triubhas'),
+	('Reel'), ('Flora'), ('Scottish Lilt'), ('Jig'), ("Sailor's Hornpipe"),
+	('Highland Laddie'), ('Village Maid'), ('Blue Bonnets'),
+	('Earl of Erroll'), ('Scotch Measure'), ('Barracks Johnnie'),
+	('Pas de Basques'), ('Pas de Basques and High Cuts'), ('Scholarship'),
+	('Most Promising'), ('Special Award'), ('Dancer of the Day'),
+	('Choreography'), ('Special/Trophy Fling'), ('Broadswords'),
+	('Cake Walk'), ('Reel Team');
+
 --PlaceValues are the point values of different places in an event
 create table placeValues (
 	place		integer primary key not null,
 	points		integer
 );
+
+insert into placeValues (
+	place, points
+) values (1, 137), (2, 91), (3, 71), (4, 53), (5,37), (6, 23);
 
 -- Events are dances and special trophies at a particular competition which can award medals
 create table events (
@@ -68,6 +88,17 @@ create table dancerCats (
     abbrev      text,
     protected   integer
 );
+
+insert into dancerCats (
+		name, abbrev, protected
+) values ('', '', 1), (
+		'Primary', 'P', 1), (
+		'Beginner', 'B', 1), (
+		'Novice', 'N', 1), (
+		'Intermediate', 'I', 1), (
+		'Premier', 'X', 1), (
+		'Choreography', 'C', 1), (
+		'Special Award', 'S', 1);
 
 -- Dancer Groups are age groupings within the Dancer Categories
 -- Additional Dancer Groups can be made that are for special awards
@@ -136,16 +167,10 @@ create table judges (
     lastName    text,
     competition integer
 );
---
--- -- Settings stores information on the schema and app version as well as settings within the app
--- create table settings (
---     name        text,
---     version     real,
---     schema      real,
---     interface   integer,
---     lastComp    integer,
---     orderPlaces integer
--- );
+
+insert into judges (
+	firstName, lastName, competition
+) values ('', '', 9999999999);
 
 -- Placing Values are the points awarded for placing in regular events
 create table placingValues (

@@ -20,7 +20,7 @@ class SCDatabase:
             self.conn = self.create_connection()
             self.create_schema()
             self.tables = Tables(self)
-            self.insert_initial_data()
+            # self.insert_initial_data()
         else:
             self.conn = self.create_connection()
             self.tables = Tables(self)
@@ -51,52 +51,52 @@ class SCDatabase:
         self.conn.executescript(schema)
         self.conn.commit()
 
-    def check(self):
-        """Check whether the DB is new, and create schema and load defaults."""
-        if os.path.exists(self.settings.db_file):
-            print(f'Database {self.settings.db_file} exists.')
-        else:
-            print(f'{self.settings.db_file} is a new database.')
-            self.create_schema()
-            self.insert_initial_data()
+    # def check(self):
+    #     """Check whether the DB is new, and create schema and load defaults."""
+    #     if os.path.exists(self.settings.db_file):
+    #         print(f'Database {self.settings.db_file} exists.')
+    #     else:
+    #         print(f'{self.settings.db_file} is a new database.')
+    #         self.create_schema()
+            # self.insert_initial_data()
 
-    def insert_initial_data(self):
-        """Preload the DB with some necessary data."""
-        print('Inserting initial data')
-        categories = [sc.DancerCat(0, '', '', 1),
-                      sc.DancerCat(0, 'Primary', 'P', 1),
-                      sc.DancerCat(0, 'Beginner', 'B', 1),
-                      sc.DancerCat(0, 'Novice', 'N', 1),
-                      sc.DancerCat(0, 'Intermediate', 'I', 1),
-                      sc.DancerCat(0, 'Premier', 'X', 1),
-                      sc.DancerCat(0, 'Choreography', 'C', 1),
-                      sc.DancerCat(0, 'Special Award', 'S', 1)]
-        for category in categories:
-            self.tables.categories.insert(category)
-        types = [sc.CompetitionType(0, 'Regular', 'Reg', 0, 1),
-                 sc.CompetitionType(0, 'Championship', 'Champ', 1, 1),
-                 sc.CompetitionType(0, 'Premiership', 'Prem', 1, 1)]
-        for tp in types:
-            self.tables.competition_types.insert(tp)
-        place_values = [sc.PlaceValue(1, 137), sc.PlaceValue(2, 91),
-                        sc.PlaceValue(3, 71), sc.PlaceValue(4, 53),
-                        sc.PlaceValue(5, 37), sc.PlaceValue(6, 23)]
-        for pv in place_values:
-            self.tables.place_values.insert(pv)
-        self.tables.judges.insert(sc.Judge(0, '', '', 9999999999))
-        print('Loading dances...')
-        dances = ['Dance/Award', 'Highland Fling', 'Sword Dance',
-                  'Sean Triubhas', 'Reel', 'Flora', 'Scottish Lilt', 'Jig',
-                  'Sailor\'s Hornpipe', 'Highland Laddie', 'Village Maid',
-                  'Blue Bonnets', 'Earl of Erroll', 'Scotch Measure',
-                  'Barracks Johnnie', 'Pas de Basques',
-                  'Pas de Basques and High Cuts', 'Scholarship',
-                  'Most Promising', 'Special Award', 'Dancer of the Day',
-                  'Choreography', 'Special/Trophy Fling', 'Broadswords',
-                  'Cake Walk', 'Reel Team']
-        for d in dances:
-            self.tables.dances.insert(sc.Dance(0, d))
-        self.conn.commit()
+    # def insert_initial_data(self):
+    #     """Preload the DB with some necessary data."""
+    #     print('Inserting initial data')
+        # categories = [sc.DancerCat(0, '', '', 1),
+        #               sc.DancerCat(0, 'Primary', 'P', 1),
+        #               sc.DancerCat(0, 'Beginner', 'B', 1),
+        #               sc.DancerCat(0, 'Novice', 'N', 1),
+        #               sc.DancerCat(0, 'Intermediate', 'I', 1),
+        #               sc.DancerCat(0, 'Premier', 'X', 1),
+        #               sc.DancerCat(0, 'Choreography', 'C', 1),
+        #               sc.DancerCat(0, 'Special Award', 'S', 1)]
+        # for category in categories:
+        #     self.tables.categories.insert(category)
+        # types = [sc.CompetitionType(0, 'Regular', 'Reg', 0, 1),
+        #          sc.CompetitionType(0, 'Championship', 'Champ', 1, 1),
+        #          sc.CompetitionType(0, 'Premiership', 'Prem', 1, 1)]
+        # for tp in types:
+        #     self.tables.competition_types.insert(tp)
+        # place_values = [sc.PlaceValue(1, 137), sc.PlaceValue(2, 91),
+        #                 sc.PlaceValue(3, 71), sc.PlaceValue(4, 53),
+        #                 sc.PlaceValue(5, 37), sc.PlaceValue(6, 23)]
+        # for pv in place_values:
+        #     self.tables.place_values.insert(pv)
+        # self.tables.judges.insert(sc.Judge(0, '', '', 9999999999))
+        # print('Loading dances...')
+        # dances = ['Dance/Award', 'Highland Fling', 'Sword Dance',
+        #           'Sean Triubhas', 'Reel', 'Flora', 'Scottish Lilt', 'Jig',
+        #           'Sailor\'s Hornpipe', 'Highland Laddie', 'Village Maid',
+        #           'Blue Bonnets', 'Earl of Erroll', 'Scotch Measure',
+        #           'Barracks Johnnie', 'Pas de Basques',
+        #           'Pas de Basques and High Cuts', 'Scholarship',
+        #           'Most Promising', 'Special Award', 'Dancer of the Day',
+        #           'Choreography', 'Special/Trophy Fling', 'Broadswords',
+        #           'Cake Walk', 'Reel Team']
+        # for d in dances:
+        #     self.tables.dances.insert(sc.Dance(0, d))
+        # self.conn.commit()
 
     def retrieve_csv_dict(self, csv_filename):
         if os.path.exists(csv_filename):

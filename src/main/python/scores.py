@@ -31,7 +31,8 @@ class ScoreEntryWindow(qt.QDialog):
         self.judges = self.db.tables.judges.get_by_competition(self.comp_id)
         self.selector_judge.addItem('')
         for judge in self.judges:
-            self.selector_judge.addItem('%s %s' % (judge.firstName, judge.lastName))
+            self.selector_judge.addItem('%s %s' % (judge.firstName,
+                                                   judge.lastName))
             self.judge_ids.append(judge.id)
         self.table_scores = qt.QTableWidget()
         self.headers = ['Num', 'Score', 'id']
