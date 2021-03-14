@@ -240,7 +240,8 @@ class ResultsViewWindow(qt.QDialog):
             return
 
     def new_group_selected(self):
-        self.dancerGroup = self.db.tables.groups.get(self.dancerGroup_ids[self.selector_dancerGroup.currentIndex()])
+        self.dancerGroup = self.db.tables.groups.get(
+            self.dancerGroup_ids[self.selector_dancerGroup.currentIndex()])
         for i in reversed(range(self.groupBox_scores_layout.count())):
             if isinstance(self.groupBox_scores_layout.itemAt(i).widget(),ResultsGroupBox):
                 self.groupBox_scores_layout.itemAt(i).widget().setParent(None)

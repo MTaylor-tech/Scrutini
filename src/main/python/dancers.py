@@ -295,7 +295,8 @@ class DancerEditor(qt.QDialog):
                         print('Dancer %s %s is already in group [%s] and should remain' % (dancer.firstName, dancer.lastName, abbrev))
                     else:
                         print('Dancer %s %s is not in group [%s] and should be added' % (dancer.firstName, dancer.lastName, abbrev))
-                        dancerGroup = self.db.tables.groups.get_by_abbrev(abbrev)
+                        dancerGroup = self.db.tables.groups.get_by_abbrev(
+                                                        abbrev, self.comp_id)
                         if dancerGroup is not None:
                             self.db.tables.groups.join(dancer.id, dancerGroup.id)
                 for abbrev in already_in_abbrevs:
@@ -303,7 +304,8 @@ class DancerEditor(qt.QDialog):
                         print('Dancer %s %s is already in group [%s] and should remain' % (dancer.firstName, dancer.lastName, abbrev))
                     else:
                         print('Dancer %s %s is in group [%s] and should be removed' % (dancer.firstName, dancer.lastName, abbrev))
-                        dancerGroup = self.db.tables.groups.get_by_abbrev(abbrev)
+                        dancerGroup = self.db.tables.groups.get_by_abbrev(
+                                                        abbrev, self.comp_id)
                         if dancerGroup is not None:
                             self.db.tables.groups.unjoin(dancer.id, dancerGroup.id)
 

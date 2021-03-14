@@ -252,7 +252,10 @@ class SMainWindow(qt.QMainWindow):
 class App(qt.QApplication):
     def __init__(self, db):
         super().__init__(sys.argv)
+        self.db = db
         qg.qt_set_sequence_auto_mnemonic(True)
+        font = qg.QFont("Lucida Grande")
+        self.setFont(font)
         self.setObjectName("Scrutini")
         self.setApplicationDisplayName("Scrutini")
         self.main_window = SMainWindow(self, db)
@@ -261,7 +264,7 @@ class App(qt.QApplication):
         self.main_window.show()
 
     def exit(self):
-        # rc = self.exec_()
+        self.db.settings.write()
         print("Exit Interface")
         self.closeAllWindows()
         sys.exit(0)

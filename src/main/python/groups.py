@@ -47,7 +47,7 @@ class GroupEditor(qt.QDialog):
                         'Category', 'Age']
         self.table_dancers.setColumnCount(len(self.headers))
         self.table_dancers.setHorizontalHeaderLabels(self.headers)
-        self.column_widths = [20, 40, 120, 150, 0, 100, 20]
+        self.column_widths = [20, 60, 120, 150, 0, 100, 40]
         all_dancers = self.db.tables.dancers\
             .get_by_competition(self.dancerGroup.competition)
         column = 0

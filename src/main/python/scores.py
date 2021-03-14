@@ -46,26 +46,38 @@ class ScoreEntryWindow(qt.QDialog):
         row = 0
         self.dancers = self.db.tables.dancers.get_ordered_by_number(self.event.dancerGroup)
         self.scores = {}
-        for dancer in self.dancers:
-            item_dancer_num = qt.QTableWidgetItem(dancer.number)
-            item_dancer_num.setFlags(qc.Qt.NoItemFlags)
+        if len(self.dancers) > 0:
             if self.db.tables.scores.exists_for_event(self.event.id):
-                score = self.db.tables.scores.get_by_event_dancer(self.event.id, dancer.id)
-                if score is not None:
-                    item_dancer_score = qt.QTableWidgetItem('%6.0f' % score.score)
+                for x in range(len(self.dancers)):
+                    score = self.db.tables.scores.get_by_event_dancer(
+                        self.event.id, self.dancers[x].id)
+                    if score is not None:
+                        self.judge_id = score.judge
+                        self.selector_judge.setCurrentIndex(
+                            self.judge_ids.index(self.judge_id))
+                        break
+            else:
+                self.judge_id = 0
+                self.selector_judge.setCurrentIndex(0)
+            for dancer in self.dancers:
+                item_dancer_num = qt.QTableWidgetItem(dancer.number)
+                item_dancer_num.setFlags(qc.Qt.NoItemFlags)
+                if self.db.tables.scores.exists_for_event(self.event.id):
+                    score = self.db.tables.scores.get_by_event_dancer(self.event.id, dancer.id)
+                    if score is not None:
+                        item_dancer_score = qt.QTableWidgetItem('%6.0f' % score.score)
+                    else:
+                        item_dancer_score = qt.QTableWidgetItem('')
                 else:
                     item_dancer_score = qt.QTableWidgetItem('')
-            else:
-                item_dancer_score = qt.QTableWidgetItem('')
-            item_dancer_id = qt.QTableWidgetItem('%d' % dancer.id)
+                item_dancer_id = qt.QTableWidgetItem('%d' % dancer.id)
 
+                self.table_scores.setRowCount(row+1)
+                self.table_scores.setItem(row, 0, item_dancer_num)
+                self.table_scores.setItem(row, 1, item_dancer_score)
+                self.table_scores.setItem(row, 2, item_dancer_id)
 
-            self.table_scores.setRowCount(row+1)
-            self.table_scores.setItem(row, 0, item_dancer_num)
-            self.table_scores.setItem(row, 1, item_dancer_score)
-            self.table_scores.setItem(row, 2, item_dancer_id)
-
-            row += 1
+                row += 1
         self.table_scores.setColumnHidden(2,True)
         #xxx is there a way to make a column unselectable? If so, make the dancer_num column such
         self.table_scores.itemChanged.connect(self.item_changed)
@@ -108,26 +120,37 @@ class ScoreEntryWindow(qt.QDialog):
         row = 0
         self.dancers = self.db.tables.dancers.get_ordered_by_number(self.event.dancerGroup)
         self.scores = {}
-        for dancer in self.dancers:
-            item_dancer_num = qt.QTableWidgetItem(dancer.number)
-            item_dancer_num.setFlags(qc.Qt.NoItemFlags)
+        if len(self.dancers) > 0:
             if self.db.tables.scores.exists_for_event(self.event.id):
-                score = self.db.tables.scores.get_by_event_dancer(self.event.id, dancer.id)
-                if score is not None:
-                    item_dancer_score = qt.QTableWidgetItem('%6.0f' % score.score)
+                for x in range(len(self.dancers)):
+                    score = self.db.tables.scores.get_by_event_dancer(
+                        self.event.id, self.dancers[x].id)
+                    if score is not None:
+                        self.judge_id = score.judge
+                        self.selector_judge.setCurrentIndex(
+                            self.judge_ids.index(self.judge_id))
+                        break
+            else:
+                self.judge_id = 0
+                self.selector_judge.setCurrentIndex(0)
+            for dancer in self.dancers:
+                item_dancer_num = qt.QTableWidgetItem(dancer.number)
+                item_dancer_num.setFlags(qc.Qt.NoItemFlags)
+                if self.db.tables.scores.exists_for_event(self.event.id):
+                    score = self.db.tables.scores.get_by_event_dancer(self.event.id, dancer.id)
+                    if score is not None:
+                        item_dancer_score = qt.QTableWidgetItem('%6.0f' % score.score)
+                    else:
+                        item_dancer_score = qt.QTableWidgetItem('')
                 else:
                     item_dancer_score = qt.QTableWidgetItem('')
-            else:
-                item_dancer_score = qt.QTableWidgetItem('')
-            item_dancer_id = qt.QTableWidgetItem('%d' % dancer.id)
+                item_dancer_id = qt.QTableWidgetItem('%d' % dancer.id)
+                self.table_scores.setRowCount(row+1)
+                self.table_scores.setItem(row, 0, item_dancer_num)
+                self.table_scores.setItem(row, 1, item_dancer_score)
+                self.table_scores.setItem(row, 2, item_dancer_id)
 
-
-            self.table_scores.setRowCount(row+1)
-            self.table_scores.setItem(row, 0, item_dancer_num)
-            self.table_scores.setItem(row, 1, item_dancer_score)
-            self.table_scores.setItem(row, 2, item_dancer_id)
-
-            row += 1
+                row += 1
         self.results_box.select_event(self.event.id) #xxx
         self.changes_made = False
 
@@ -135,7 +158,8 @@ class ScoreEntryWindow(qt.QDialog):
         self.table_scores.setFocus()
         row = 0
         judge_id = (self.judge_ids[self.selector_judge.currentIndex()])
-        if (self.competition.competitionType > 0):
+        # print(judge_id)
+        if (self.competition.competitionType > 0): # TODO this should be a real check for championship
             self.db.tables.scores.remove_by_event_judge(self.event.id, judge_id)
         else:
             self.db.tables.scores.remove_by_event(self.event.id)
@@ -151,6 +175,7 @@ class ScoreEntryWindow(qt.QDialog):
                 score = self.db.tables.scores.insert(score)
                 #id, dancer, event, judge, competition, score
             row += 1
+        self.db.conn.commit()
         # xxxs needs to take judge into account for championships
         self.changes_made = False
         self.results_box.select_event(self.event.id)

@@ -322,20 +322,20 @@ class TableGroups:
         self.cursor.execute(f"select * from dancerGroups where id = {int(id)}")
         return sc.DancerGroup(*self.cursor.fetchone())
 
-    def get_by_abbrev(self, abbrev):
+    def get_by_abbrev(self, abbrev, comp_id):
         """Return a single DancerGroup specified by abbrev"""
-        self.cursor.execute('select * from dancerGroups where abbrev = \"%s\"'
-                            % abbrev)
+        self.cursor.execute('select * from dancerGroups where abbrev = \"%s\"\
+                            and competition = %d' % (abbrev, comp_id))
         result = self.cursor.fetchone()
         if result is not None:
             return sc.DancerGroup(*result)
         else:
             return None
 
-    def get_by_name(self, name):
+    def get_by_name(self, name, comp_id):
         """Return a single DancerGroup specified by name"""
-        self.cursor.execute('select * from dancerGroups where name = \"%s\"'
-                            % name)
+        self.cursor.execute('select * from dancerGroups where name = \"%s\"\
+                            and competition = %d' % (name, comp_id))
         result = self.cursor.fetchone()
         if result is not None:
             return sc.DancerGroup(*result)
@@ -358,10 +358,10 @@ class TableGroups:
 
     def get_or_new(self, comp_id, g_string):
         """Look for an existing DancerGroup, but make a new one if not found"""
-        if self.get_by_abbrev(g_string) is not None:
-            return self.get_by_abbrev(g_string)
-        elif self.get_by_name(g_string) is not None:
-            return self.get_by_name(g_string)
+        if self.get_by_abbrev(g_string, comp_id) is not None:
+            return self.get_by_abbrev(g_string, comp_id)
+        elif self.get_by_name(g_string, comp_id) is not None:
+            return self.get_by_name(g_string, comp_id)
         else:
             dancer_group = self.new(comp_id)
             dancer_group.name = g_string
@@ -369,7 +369,7 @@ class TableGroups:
             got_it = False
             i = 0
             while not got_it:
-                if self.get_by_abbrev(a_string) is None:
+                if self.get_by_abbrev(a_string, comp_id) is None:
                     got_it = True
                 else:
                     if i < 1:
@@ -581,7 +581,7 @@ class TableDances:
         return sc.Dance(*self.cursor.fetchone())
 
     def new(self):
-        dance = sc.Dance(0,'')
+        dance = sc.Dance(0, '')
         return self.insert(dance)
 
     def insert(self, dance):
@@ -632,6 +632,24 @@ class TableScores:
     def exists_for_event(self, id):
         """Verify if there are any Scores for an Event"""
         scores = self.get_by_event(id)
+        if scores is None or scores == []:
+            return False
+        else:
+            return True
+
+    def get_by_event_judge(self, event_id, judge_id):
+        """Return a list of all Scores from an Event and judge by id"""
+        self.cursor.execute('select * from scores where event = %d and\
+                            judge = %d' % (event_id, judge_id))
+        results = self.cursor.fetchall()
+        scores = []
+        for s in results:
+            scores.append(sc.Score(*s))
+        return scores
+
+    def exists_for_event_judge(self, event_id, judge_id):
+        """Verify if there are any Scores for an Event and judge by Id"""
+        scores = self.get_by_event_judge(event_id, judge_id)
         if scores is None or scores == []:
             return False
         else:
