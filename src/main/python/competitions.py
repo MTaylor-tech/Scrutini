@@ -4,12 +4,14 @@ import PyQt5.QtWidgets as qt
 import PyQt5.QtCore as qc
 import PyQt5.QtGui as qg
 from sWidgets import SPushButton, get_formatted_date
+import pdb
 
 
 class CompetitionEditor(qt.QDialog):
     def __init__(self, main_window, competition_id, db):
         super().__init__()
         self.db = db
+        v = self.db.settings.verbose
         if self.db.settings.verbose:
             print("CompetitionEditor in competitions.py")
         self.main_window = main_window
@@ -64,6 +66,9 @@ class CompetitionEditor(qt.QDialog):
         self.layout.addWidget(self.button_exit)
         # self.setWindowModality(qc.Qt.ApplicationModal)
         self.setLayout(self.layout)
+        self.main_window.show()
+        self.show()
+        self.field_name.setFocus()
 
     def save(self):
         self.competition.name = self.field_name.text()

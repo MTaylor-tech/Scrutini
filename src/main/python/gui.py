@@ -20,9 +20,10 @@ from judges import JudgeSelector
 class SMainWindow(qt.QMainWindow):
     def __init__(self, interface, db):
         super(SMainWindow, self).__init__()
-        label_text = ''
-        self.label = qt.QLabel(label_text)
-        self.toolbar = self.addToolBar(qc.Qt.LeftToolBarArea, self.tool_bar())
+        # label_text = ''
+        self.label = qt.QLabel('')
+        # self.toolbar = self.addToolBar(qc.Qt.LeftToolBarArea, self.tool_bar())
+        self.addToolBar(qc.Qt.LeftToolBarArea, self.tool_bar())
         # self.setUnifiedTitleAndToolBarOnMac(True)
         self.app = interface
         self.db = db
@@ -32,14 +33,14 @@ class SMainWindow(qt.QMainWindow):
         self.setGeometry(0, 0, 1200, 800)
         self.competition = None
         # self.competition = sc.Competition(0,'','',None,None,'',None)
-        self.competition = self.retrieve_competition()
-        self.set_competition(self.competition.iid)
-        if self.competition is None:
-            self.disable_buttons()
+        # self.competition = self.retrieve_competition()
+        # self.set_competition(self.competition.iid)
+        # if self.competition is None:
+        #     self.disable_buttons()
         self.statusBar()
         self.statusBar().show()
         menubar = qt.QMenuBar(self)
-        menubar.setNativeMenuBar(False)  # True means menubar in upper
+        # menubar.setNativeMenuBar(True)  # True means menubar in upper
         exit_action = qt.QAction(' &Quit', self)
         exit_action.setShortcut('Ctrl+Q')
         exit_action.setStatusTip('Exit Application')
@@ -57,9 +58,19 @@ class SMainWindow(qt.QMainWindow):
         competition_menu.addAction(change_competition_action)
         competition_menu.addAction(edit_competition_action)
         self.setMenuBar(menubar)
+
+        self.competition = self.retrieve_competition()
+        self.set_competition(self.competition.iid)
+        if self.competition is None:
+            self.disable_buttons()
+        # self.label.show()
+
         menubar.show()
 
     def tool_bar(self):
+        label_text = ''
+        self.label = qt.QLabel(label_text)
+
         button_scrutineer = qt.QPushButton('Enter &Scores')
         button_view_scores = qt.QPushButton('&View/Print Results')
         button_change_competition = qt.QPushButton('&Change Competition')
