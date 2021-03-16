@@ -20,18 +20,20 @@ from judges import JudgeSelector
 class SMainWindow(qt.QMainWindow):
     def __init__(self, interface, db):
         super(SMainWindow, self).__init__()
-        # label_text = ''
-        self.label = qt.QLabel('')
-        # self.toolbar = self.addToolBar(qc.Qt.LeftToolBarArea, self.tool_bar())
-        self.addToolBar(qc.Qt.LeftToolBarArea, SToolBar(self))
-        # self.setUnifiedTitleAndToolBarOnMac(True)
         self.app = interface
         self.db = db
+        # label_text = ''
+        self.label = qt.QLabel('')
+        self.toolbar = SToolBar(self)
+        # self.toolbar = self.addToolBar(qc.Qt.LeftToolBarArea, self.tool_bar())
+        self.addToolBar(qc.Qt.LeftToolBarArea, self.toolbar)
+        # self.setUnifiedTitleAndToolBarOnMac(True)
         # self.app = PyQtApp()
         self.setWindowTitle("Scrutini ")
         self.setWindowIcon(qg.QIcon("../icons/base/64.png"))
         self.setGeometry(0, 0, 1200, 800)
         self.competition = None
+        self.toolbar.buttons.disable_all()
         # self.competition = sc.Competition(0,'','',None,None,'',None)
         # self.competition = self.retrieve_competition()
         # self.set_competition(self.competition.iid)
@@ -61,10 +63,13 @@ class SMainWindow(qt.QMainWindow):
 
         self.competition = self.retrieve_competition()
         self.set_competition(self.competition.iid)
-        if self.competition is None:
-            self.toolBar.buttons.disable_all()
-            # self.disable_buttons()
+        if self.competition is not None:
+            self.toolbar.buttons.enable_all()
+        # if self.competition is None:
+        #     self.toolBar().buttons.disable_all()
+        #     # self.disable_buttons()
         # self.label.show()
+        print(self.db.get_all_ids("dance"))
 
         menubar.show()
 
@@ -139,17 +144,19 @@ class SMainWindow(qt.QMainWindow):
     def set_competition(self, competition_id):
         self.competition = self.db.t.competition.get(competition_id)
         if self.competition is not None:
-            self.label_text = ('<center>Competition:<br><strong>%s</strong>\
+            label_text = ('<center>Competition:<br><strong>%s</strong>\
                                <br>%8s<br>%s</center>' %
                                (self.competition.name,
                                 get_formatted_date(
                                     self.competition.event_date),
                                 self.competition.location))
-            self.label.setText(self.label_text)
+            # self.label.setText(self.label_text)
+            self.toolbar.set_label(label_text)
             self.db.s.last_comp = self.competition.iid
             return self.competition
         else:
-            self.label_text = ('<center>No Competition Selected</center>')
+            label_text = ('<center>No Competition Selected</center>')
+            self.toolbar.set_label(label_text)
             return None
 
     def select_dancer_group(self):
@@ -197,17 +204,17 @@ class SToolBar(qt.QToolBar):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
-        # self.buttons = STButtons(self)
-        buttons = STButtons(self)
+        self.buttons = STButtons(self)
         label_text = ''
         self.label = qt.QLabel(label_text)
         self.addWidget(self.label)
-        # for button in self.buttons.buttons:
-        for button in buttons.buttons:
+        for button in self.buttons.buttons:
             self.addWidget(button)
         self.setOrientation(qc.Qt.Vertical)
         self.label.show()
-        self.buttons.disable_all()
+
+    def set_label(self, text):
+        self.label.setText(text)
 
 
 class STButtons:

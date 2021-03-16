@@ -55,6 +55,44 @@ class SCDatabase:
         self.conn.executescript(schema)
         self.conn.commit()
 
+    def get_all_ids(self, table):
+        """Return a list of all IDs"""
+        self.cursor.execute('select id from %s' % table)
+        result = self.cursor.fetchall()
+        if result is not None:
+            ids = []
+            for iid in result:
+                ids.append(iid[0])
+            return ids
+        else:
+            return []
+
+    def get_all(self, table, datatype):
+        """Return a list of all from a table"""
+        self.cursor.execute('select * from %s' % table)
+        result = self.cursor.fetchall()
+        if result is not None:
+            items = []
+            for item in result:
+                items.append(datatype(*item))
+            return items
+        else:
+            return []
+
+    def get(self, table, datatype, iid):
+        """Return a single item"""
+        self.cursor.execute(f"select * from {table} where id = {iid}")
+        result = self.cursor.fetchone()
+        if result is not None:
+            return datatype(*result)
+        else:
+            return None
+
+    def save(self):
+        self.conn.commit()
+        if self.s.verbose:
+            print("DB Saved")
+
 
 class Tables:
     def __init__(self, db):
@@ -74,10 +112,12 @@ class TableCompetitionTypes:
     def __init__(self, db):
         self.conn = db.conn
         self.cursor = self.conn.cursor()
+        self.table = "competition_type"
+        self.datatype = sc.CompetitionType
 
     def get_all(self):
         """Return a list of CompetitionTypes"""
-        self.cursor.execute('select * from competition_type')
+        self.cursor.execute('select * from %s' % self.table)
         result = self.cursor.fetchall()
         if result is not None:
             competition_types = []
@@ -120,18 +160,32 @@ class TableCompetitions:
         self.conn = db.conn
         self.cursor = self.conn.cursor()
         self.db = db
+        self.table = "competition"
+        self.datatype = sc.Competition
 
     def get_all(self):
         """Return a list of Competitions"""
-        self.cursor.execute('select * from competition')
+        self.cursor.execute('select * from %s' % self.table)
         result = self.cursor.fetchall()
         if result is not None:
             competitions = []
             for comp in result:
-                competitions.append(sc.Competition(*comp))
+                competitions.append(self.datatype(*comp))
             return competitions
         else:
             return None
+
+    def get_all_ids(self):
+        """Return a list of all IDs"""
+        self.cursor.execute('select id from %s' % self.table)
+        result = self.cursor.fetchall()
+        if result is not None:
+            ids = []
+            for iid in result:
+                ids.append(id)
+            return ids
+        else:
+            return []
 
     def get(self, iid):
         """Return a single Competition specified by id"""
@@ -502,6 +556,8 @@ class TableDances:
     def __init__(self, db):
         self.conn = db.conn
         self.cursor = self.conn.cursor()
+        self.table = "dance"
+        self.datatype = sc.Dance
 
     def get_all(self):
         """Return all Dances"""
@@ -512,6 +568,18 @@ class TableDances:
             for dance in results:
                 dances.append(sc.Dance(*dance))
         return dances
+
+    def get_all_ids(self):
+        """Return a list of all IDs"""
+        self.cursor.execute('select id from %s' % self.table)
+        result = self.cursor.fetchall()
+        if result is not None:
+            ids = []
+            for iid in result:
+                ids.append(iid[0])
+            return ids
+        else:
+            return []
 
     def get(self, iid):
         """Return a single Dance by id"""

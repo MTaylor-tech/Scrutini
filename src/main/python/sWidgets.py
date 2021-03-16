@@ -13,26 +13,13 @@ class SPushButton(QPushButton):
 
     def on_button_clicked(self):
         self.fn(self.identifier)
-#
-#
-# class SCPushButton(QPushButton):
-#     def __init__(self, text, compSelector, identifier):
-#         super(SPushButton, self).__init__(text)
-#         self.identifier = identifier
-#         self.compSelector = compSelector
-#
-#     def on_button_clicked(self):
-#         self.compSelector.set_competition(self.identifier)
-#
-#
-# class SDGPushButton(QPushButton):
-#     def __init__(self, text, dgSelector, identifier):
-#         super(SDGPushButton, self).__init__(text)
-#         self.identifier = identifier
-#         self.dgSelector = dgSelector
-#
-#     def on_button_clicked(self):
-#         self.dgSelector.set_dancer_group(self.identifier)
+
+
+class SMessageBox(QMessageBox):
+    def __init__(self, sender):
+        super().__init__()
+        self.setText(sender.text())
+        self.exec_()
 
 
 def on_button_clicked(sender):
