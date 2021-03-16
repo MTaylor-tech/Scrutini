@@ -4,6 +4,7 @@ import os
 import csv
 import datetime
 import classes as sc
+from sWidgets import today
 
 
 class SCDatabase:
@@ -20,10 +21,13 @@ class SCDatabase:
             self.conn = self.create_connection()
             self.create_schema()
             self.tables = Tables(self)
+            self.t = self.tables
             # self.insert_initial_data()
         else:
             self.conn = self.create_connection()
             self.tables = Tables(self)
+            self.t = self.tables
+        self.s = self.settings
         self.cursor = self.conn.cursor()
 
     def open_connection(self):
@@ -51,84 +55,19 @@ class SCDatabase:
         self.conn.executescript(schema)
         self.conn.commit()
 
-    # def check(self):
-    #     """Check whether the DB is new, and create schema and load defaults."""
-    #     if os.path.exists(self.settings.db_file):
-    #         print(f'Database {self.settings.db_file} exists.')
-    #     else:
-    #         print(f'{self.settings.db_file} is a new database.')
-    #         self.create_schema()
-            # self.insert_initial_data()
-
-    # def insert_initial_data(self):
-    #     """Preload the DB with some necessary data."""
-    #     print('Inserting initial data')
-        # categories = [sc.DancerCat(0, '', '', 1),
-        #               sc.DancerCat(0, 'Primary', 'P', 1),
-        #               sc.DancerCat(0, 'Beginner', 'B', 1),
-        #               sc.DancerCat(0, 'Novice', 'N', 1),
-        #               sc.DancerCat(0, 'Intermediate', 'I', 1),
-        #               sc.DancerCat(0, 'Premier', 'X', 1),
-        #               sc.DancerCat(0, 'Choreography', 'C', 1),
-        #               sc.DancerCat(0, 'Special Award', 'S', 1)]
-        # for category in categories:
-        #     self.tables.categories.insert(category)
-        # types = [sc.CompetitionType(0, 'Regular', 'Reg', 0, 1),
-        #          sc.CompetitionType(0, 'Championship', 'Champ', 1, 1),
-        #          sc.CompetitionType(0, 'Premiership', 'Prem', 1, 1)]
-        # for tp in types:
-        #     self.tables.competition_types.insert(tp)
-        # place_values = [sc.PlaceValue(1, 137), sc.PlaceValue(2, 91),
-        #                 sc.PlaceValue(3, 71), sc.PlaceValue(4, 53),
-        #                 sc.PlaceValue(5, 37), sc.PlaceValue(6, 23)]
-        # for pv in place_values:
-        #     self.tables.place_values.insert(pv)
-        # self.tables.judges.insert(sc.Judge(0, '', '', 9999999999))
-        # print('Loading dances...')
-        # dances = ['Dance/Award', 'Highland Fling', 'Sword Dance',
-        #           'Sean Triubhas', 'Reel', 'Flora', 'Scottish Lilt', 'Jig',
-        #           'Sailor\'s Hornpipe', 'Highland Laddie', 'Village Maid',
-        #           'Blue Bonnets', 'Earl of Erroll', 'Scotch Measure',
-        #           'Barracks Johnnie', 'Pas de Basques',
-        #           'Pas de Basques and High Cuts', 'Scholarship',
-        #           'Most Promising', 'Special Award', 'Dancer of the Day',
-        #           'Choreography', 'Special/Trophy Fling', 'Broadswords',
-        #           'Cake Walk', 'Reel Team']
-        # for d in dances:
-        #     self.tables.dances.insert(sc.Dance(0, d))
-        # self.conn.commit()
-
-    def retrieve_csv_dict(self, csv_filename):
-        if os.path.exists(csv_filename):
-            with open(csv_filename, newline='') as csvfile:
-                reader = csv.DictReader(csvfile)
-                return reader
-        else:
-            print('File not found.')
-            return None
-
-    def retrieve_csv_keys(self, csv_filename):
-        if os.path.exists(csv_filename):
-            with open(csv_filename, newline='') as csvfile:
-                reader = csv.reader(csvfile)
-                return next(reader)
-        else:
-            print('File not found.')
-            return None
-
 
 class Tables:
     def __init__(self, db):
-        self.competition_types = TableCompetitionTypes(db)
-        self.competitions = TableCompetitions(db)
-        self.categories = TableCategories(db)
-        self.judges = TableJudges(db)
-        self.dancers = TableDancers(db)
-        self.groups = TableGroups(db)
-        self.dances = TableDances(db)
-        self.events = TableEvents(db)
-        self.place_values = TablePlaceValues(db)
-        self.scores = TableScores(db)
+        self.competition_type = TableCompetitionTypes(db)
+        self.competition = TableCompetitions(db)
+        self.category = TableCategories(db)
+        self.judge = TableJudges(db)
+        self.dancer = TableDancers(db)
+        self.group = TableGroups(db)
+        self.dance = TableDances(db)
+        self.event = TableEvents(db)
+        self.place_value = TablePlaceValues(db)
+        self.score = TableScores(db)
 
 
 class TableCompetitionTypes:
@@ -138,40 +77,40 @@ class TableCompetitionTypes:
 
     def get_all(self):
         """Return a list of CompetitionTypes"""
-        self.cursor.execute('select * from competitionTypes')
+        self.cursor.execute('select * from competition_type')
         result = self.cursor.fetchall()
         if result is not None:
-            competitionTypes = []
-            for ct in result:
-                competitionTypes.append(sc.CompetitionType(*ct))
-            return competitionTypes
+            competition_types = []
+            for comp_type in result:
+                competition_types.append(sc.CompetitionType(*comp_type))
+            return competition_types
         else:
             return None
 
-    def get(self, id):
+    def get(self, iid):
         """Return a single specified CompetitionType by id"""
-        self.cursor.execute('select * from competitionTypes where id = %d' %
-                            int(id))
+        self.cursor.execute('select * from competition_type where id = %d' %
+                            int(iid))
         return sc.CompetitionType(*self.cursor.fetchone())
 
     def new(self):
-        new_type = sc.CompetitionType(0, '', '', 0, 0)
+        new_type = sc.CompetitionType(0, '', '')
         return self.insert(new_type)
 
-    def insert(self, type):
-        self.cursor.execute(f"insert into competitionTypes (name, abbrev,\
-                            isChampionship, protected) values\
-                            (\"{type.name}\", \"{type.abbrev}\",\
-                            {type.isChampionship}, {type.isProtected})")
-        type.id = self.cursor.lastrowid
-        return type
+    def insert(self, c_type):
+        self.cursor.execute(f"insert into competition_type (name, abbrev,\
+                            championship, protected) values\
+                            (\"{c_type.name}\", \"{c_type.abbrev}\",\
+                            {c_type.championship}, {c_type.protected})")
+        c_type.iid = self.cursor.lastrowid
+        return c_type
 
-    def update(self, type):
-        self.cursor.execute('update competitionTypes set name = \"%s\", abbrev\
-                             = \"%s\", isChampionship = %d, protected = %d\
+    def update(self, c_type):
+        self.cursor.execute('update competition_type set name = \"%s\", abbrev\
+                             = \"%s\", championship = %d, protected = %d\
                              where id = %d' %
-                            (type.name, type.abbrev, type.isChampionship,
-                             type.isProtected, type.id))
+                            (c_type.name, c_type.abbrev, c_type.championship,
+                             c_type.protected, c_type.iid))
         self.conn.commit()
         return type
 
@@ -184,58 +123,55 @@ class TableCompetitions:
 
     def get_all(self):
         """Return a list of Competitions"""
-        self.cursor.execute('select * from competitions')
+        self.cursor.execute('select * from competition')
         result = self.cursor.fetchall()
         if result is not None:
             competitions = []
-            for c in result:
-                competitions.append(sc.Competition(*c))
+            for comp in result:
+                competitions.append(sc.Competition(*comp))
             return competitions
         else:
             return None
 
-    def get(self, id):
+    def get(self, iid):
         """Return a single Competition specified by id"""
-        self.cursor.execute(f"select * from competitions where id = {int(id)}")
+        self.cursor.execute(f"select * from competition where id = {int(iid)}")
         return sc.Competition(*self.cursor.fetchone())
 
     def new(self):
-        today = datetime.date.today()
-        competition = sc.Competition(0, '', '', today, today, '', 0, 0)
+        competition = sc.Competition(0, '', '')
         return self.insert(competition)
 
     def insert(self, comp):
         """Create a new Competition"""
-        self.cursor.execute('insert into competitions(name, description,\
-                            eventDate, deadline, location, competitionType,\
-                            isChampionship)\
-                            values (\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%d,%d)'
-                            % (comp.name, comp.description, comp.eventDate,
+        self.cursor.execute(('insert into competition (name, description, '\
+                            'event_date, deadline, location, competition_type)'\
+                            'values (\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%d)'
+                            % (comp.name, comp.description, comp.event_date,
                                comp.deadline, comp.location,
-                               comp.competitionType, comp.isChampionship))
-        comp.id = self.cursor.lastrowid
+                               comp.competition_type)))
+        comp.iid = self.cursor.lastrowid
         return comp
 
     def update(self, comp):
         """Save values for the selected Competition"""
-        self.cursor.execute(f"update competitions set name='{comp.name}',\
-                            description='{comp.description}',\
-                            eventDate='{comp.eventDate}',\
-                            deadline='{comp.deadline}',\
-                            location='{comp.location}',\
-                            competitionType={comp.competitionType},\
-                            isChampionship={comp.isChampionship}\
-                            where id={comp.id}")
+        self.cursor.execute(f"update competition set name='{comp.name}',"\
+                            f"description='{comp.description}',"\
+                            f"event_date='{comp.event_date}',"\
+                            f"deadline='{comp.deadline}',"\
+                            f"location='{comp.location}',"\
+                            f"competition_type={comp.competition_type} "\
+                            f"where id={comp.iid}")
         self.conn.commit()  # This should probably be handled elsewhere
         return comp
 
-    def remove(self, id):
+    def remove(self, iid):
         """Delete the Competition specified by id and associated objects"""
-        self.cursor.execute('delete from competitions where id = %d' % int(id))
-        self.db.tables.judges.remove_by_competition(id)
-        self.db.tables.groups.remove_by_competition(id)
-        self.db.tables.dancers.remove_by_competition(id)
-        self.db.tables.events.remove_by_competition(id)
+        self.cursor.execute('delete from competition where id = %d' % int(iid))
+        self.db.tables.judges.remove_by_competition(iid)
+        self.db.tables.groups.remove_by_competition(iid)
+        self.db.tables.dancers.remove_by_competition(iid)
+        self.db.tables.events.remove_by_competition(iid)
         self.conn.commit()  # Right place?
 
 
@@ -244,24 +180,24 @@ class TableJudges:
         self.conn = db.conn
         self.cursor = self.conn.cursor()
 
-    def get_by_competition(self, id):
+    def get_by_competition(self, c_id):
         """Return a list of all Judges in a Competition specified by
         Competition.id
         """
-        self.cursor.execute(f"select * from judges where competition =\
-                             {int(id)}")
+        self.cursor.execute(f"select * from judge where competition =\
+                             {int(c_id)}")
         result = self.cursor.fetchall()
         if result is not None:
             judges = []
-            for j in result:
-                judges.append(sc.Judge(*j))
+            for judge in result:
+                judges.append(sc.Judge(*judge))
             return judges
         else:
             return None
 
-    def get(self, id):
+    def get(self, iid):
         """Return a single Judge specified by id"""
-        self.cursor.execute('select * from judges where id = %d' % int(id))
+        self.cursor.execute('select * from judge where id = %d' % int(iid))
         result = self.cursor.fetchone()
         return sc.Judge(*result)
 
@@ -271,31 +207,31 @@ class TableJudges:
 
     def insert(self, judge):
         """Create a new Judge"""
-        self.cursor.execute(f"insert into judges\
-                            (firstName, lastName, competition) values\
-                            ('{judge.firstName}','{judge.lastName}',\
+        self.cursor.execute(f"insert into judge\
+                            (first_name, last_name, competition) values\
+                            ('{judge.first_name}','{judge.last_name}',\
                             {judge.competition})")
-        judge.id = self.cursor.lastrowid
+        judge.iid = self.cursor.lastrowid
         return judge
 
     def update(self, judge):
         """Save the specified Judge"""
-        self.cursor.execute('update judges set firstName = \"%s\",\
-                            lastName = \"%s\", competition = %d where id =%d'
-                            % (judge.firstName, judge.lastName,
-                               judge.competition, judge.id))
+        self.cursor.execute('update judge set first_name = \"%s\",\
+                            last_name = \"%s\", competition = %d where id =%d'
+                            % (judge.first_name, judge.last_name,
+                               judge.competition, judge.iid))
         self.conn.commit()  # Right place?
         return judge
 
-    def remove(self, id):
+    def remove(self, iid):
         """Delete a selected Judge specified by id"""
-        self.cursor.execute('delete from judges where id = %d' % int(id))
+        self.cursor.execute('delete from judge where id = %d' % int(iid))
         self.conn.commit()  # Right place?
 
-    def remove_by_competition(self, id):
+    def remove_by_competition(self, c_id):
         """Delete all Judges in a Competition specified by Competition.id"""
-        self.cursor.execute(f"delete from judges where\
-                             competition = {int(id)}")
+        self.cursor.execute(f"delete from judge where\
+                             competition = {int(c_id)}")
         self.conn.commit()
 
 
@@ -304,27 +240,31 @@ class TableGroups:
         self.conn = db.conn
         self.cursor = self.conn.cursor()
 
-    def get_by_competition(self, id):
+    def get_by_competition(self, c_id):
         """Return a list of all DancerGroups in a Competition"""
-        self.cursor.execute(f"select * from dancerGroups where competition =\
-                            {int(id)}")
+        self.cursor.execute(f"select * from dancer_group where competition =\
+                            {int(c_id)}")
         results = self.cursor.fetchall()
         if results is not None:
             groups = []
-            for dg in results:
-                groups.append(sc.DancerGroup(*dg))
+            for group in results:
+                groups.append(sc.DancerGroup(*group))
             return groups
         else:
             return None
 
-    def get(self, id):
+    def get(self, iid):
         """Return a single DancerGroup specified by id"""
-        self.cursor.execute(f"select * from dancerGroups where id = {int(id)}")
-        return sc.DancerGroup(*self.cursor.fetchone())
+        self.cursor.execute(f"select * from dancer_group where id = {int(iid)}")
+        result = self.cursor.fetchone()
+        group = None
+        if result is not None:
+            group = sc.DancerGroup(*result)
+        return group
 
     def get_by_abbrev(self, abbrev, comp_id):
         """Return a single DancerGroup specified by abbrev"""
-        self.cursor.execute('select * from dancerGroups where abbrev = \"%s\"\
+        self.cursor.execute('select * from dancer_group where abbrev = \"%s\"\
                             and competition = %d' % (abbrev, comp_id))
         result = self.cursor.fetchone()
         if result is not None:
@@ -334,7 +274,7 @@ class TableGroups:
 
     def get_by_name(self, name, comp_id):
         """Return a single DancerGroup specified by name"""
-        self.cursor.execute('select * from dancerGroups where name = \"%s\"\
+        self.cursor.execute('select * from dancer_group where name = \"%s\"\
                             and competition = %d' % (name, comp_id))
         result = self.cursor.fetchone()
         if result is not None:
@@ -344,17 +284,16 @@ class TableGroups:
 
     def get_by_dancer(self, id):
         """Return a list of all DancerGroups a Dancer is in"""
-        self.cursor.execute('select dancer, dancerGroup from dancerGroupJoin\
-                             where dancer = %d' % id)
+        self.cursor.execute('select dancer, dancer_group from\
+                            dancer_dancer_group where dancer = %d' % id)
         results = self.cursor.fetchall()
         if results is not None:
             groups = []
-            if len(results) > 0:
-                for dg in results:
-                    groups.append(self.get(dg[1]))
+            for group in results:
+                groups.append(self.get(group[1]))
             return groups
         else:
-            return None
+            return []
 
     def get_or_new(self, comp_id, g_string):
         """Look for an existing DancerGroup, but make a new one if not found"""
@@ -382,72 +321,75 @@ class TableGroups:
             return self.update(dancer_group)
 
     def new(self, comp_id):
-        dancerGroup = sc.DancerGroup(0, '', '', 4, 99, 0, comp_id)
-        return self.insert(dancerGroup)
+        group = sc.DancerGroup(0, '', '', 4, 99, 0, comp_id)
+        return self.insert(group)
 
     def insert(self, group):
         """Create a new DancerGroup"""
-        self.cursor.execute(f"insert into dancerGroups(name, abbrev, ageMin,\
-                            ageMax, dancerCat, competition) values\
-                            ('{group.name}', '{group.abbrev}', {group.ageMin},\
-                            {group.ageMax}, {group.dancerCat},\
+        self.cursor.execute(f"insert into dancer_group (name, abbrev, age_min,\
+                            age_max, dancer_category, competition) values\
+                            ('{group.name}', '{group.abbrev}', {group.age_min},\
+                            {group.age_max}, {group.dancer_category},\
                             {group.competition})")
-        group.id = self.cursor.lastrowid
+        group.iid = self.cursor.lastrowid
         return group
 
     def update(self, group):
         """Save a DancerGroup"""
-        self.cursor.execute('update dancerGroups set name = \"%s\", abbrev =\
-                             \"%s\", ageMin = %d, ageMax = %d, dancerCat = %d,\
+        self.cursor.execute('update dancer_group set name = \"%s\", abbrev =\
+                             \"%s\", age_min = %d, age_max = %d, dancer_category = %d,\
                              competition = %d where id =%d' %
-                            (group.name, group.abbrev, group.ageMin,
-                             group.ageMax, group.dancerCat, group.competition,
-                             group.id))
+                            (group.name, group.abbrev, group.age_min,
+                             group.age_max, group.dancer_category, group.competition,
+                             group.iid))
         self.conn.commit()
         return group
 
-    def remove(self, id):
+    def remove(self, iid):
         """Delete a DancerGroup specified by id"""
-        self.cursor.execute('delete from dancerGroups where id = %d' % int(id))
+        self.cursor.execute('delete from dancer_group where id = %d' % int(iid))
         # Now disconnect this DG from any dancers:
-        self.unjoin_by_group(id)
+        self.unjoin_by_group(iid)
         self.conn.commit()
 
-    def remove_by_competition(self, id):
+    def remove_by_competition(self, c_id):
         """Delete all DancerGroups in a Competition"""
-        groups = self.get_by_competition(id)
-        for dg in groups:
-            self.remove(dg.id)
+        groups = self.get_by_competition(c_id)
+        for group in groups:
+            self.remove(group.iid)
 
     def join(self, dancer_id, group_id):
-        check = self.get_by_dancer(dancer_id)
-        if check is not None:
-            for dg in check:
-                if dg.id == group_id:
-                    # Already in group
-                    return
-        self.cursor.execute('insert into dancerGroupJoin (dancer, dancerGroup)\
-                            values(%d, %d)' % (dancer_id, group_id))
-        self.conn.commit()
+        if not self.dancer_in_group(dancer_id, group_id):
+            self.cursor.execute('insert into dancer_dancer_group (dancer, dancer_group)\
+                                values(%d, %d)' % (dancer_id, group_id))
+            self.conn.commit()
 
     def unjoin(self, dancer_id, group_id):
         """Remove the connection between Dancer and DancerGroup"""
-        self.cursor.execute('delete from dancerGroupJoin where (dancer = %d\
-                             and dancerGroup = %d)' %
+        self.cursor.execute('delete from dancer_dancer_group where (dancer = %d\
+                             and dancer_group = %d)' %
                             (int(dancer_id), int(group_id)))
         self.conn.commit()
 
-    def unjoin_by_dancer(self, id):
+    def unjoin_by_dancer(self, dancer_id):
         """Remove all DancerGroups from a Dancer"""
-        self.cursor.execute('delete from dancerGroupJoin where dancer = %d'
-                            % int(id))
+        self.cursor.execute('delete from dancer_dancer_group where dancer = %d'
+                            % int(dancer_id))
         self.conn.commit()
 
-    def unjoin_by_group(self, id):
+    def unjoin_by_group(self, group_id):
         """Remove all Dancers from a DancerGroup"""
-        self.cursor.execute('delete from dancerGroupJoin where dancerGroup =\
-                             %d' % int(id))
+        self.cursor.execute('delete from dancer_dancer_group where dancer_group =\
+                             %d' % int(group_id))
         self.conn.commit()
+
+    def dancer_in_group(self, dancer_id, group_id):
+        """Check if a dancer is in a group"""
+        result = self.cursor.execute(f"select * from dancer_dancer_group where dancer = {dancer_id} and dancer_group = {group_id}")
+        if result is None:
+            return False
+        else:
+            return True
 
 
 class TableDancers:
@@ -456,45 +398,42 @@ class TableDancers:
         self.conn = db.conn
         self.cursor = self.conn.cursor()
 
-    def find(self, dancer):
-        """Return the Dancer number for sorting"""
-        return dancer.number
+    # def find(self, dancer):
+    #     """Return the Dancer number for sorting"""
+    #     return dancer.competitor_num
 
     def get_ordered_by_number(self, group_id):
         """Return all Dancers in a DancerGroup, sorted by Dancer number"""
         dancers = self.get_by_group(group_id)
         if len(dancers) > 0:
-            dancers.sort(key=self.find)
+            # dancers.sort(key=self.find)
+            dancers.sort(key=lambda dancer: dancer.competitor_num)
         return dancers
 
-    def get_by_group(self, id):
+    def get_by_group(self, group_id):
         """Return all Dancers in a DancerGroup"""
-        self.cursor.execute('select dancer, dancerGroup from dancerGroupJoin\
-                             where dancerGroup = %d' % id)
+        self.cursor.execute('select dancer, dancer_group from dancer_dancer_group\
+                             where dancer_group = %d' % group_id)
         results = self.cursor.fetchall()
+        dancers = []
         if results is not None:
-            dancers = []
-            for d in results:
-                dancers.append(self.get(d[0]))
-            return dancers
-        else:
-            return []
+            for dancer in results:
+                dancers.append(self.get(dancer[0]))
+        return dancers
 
-    def get_by_competition(self, id):
+    def get_by_competition(self, c_id):
         """Return all Dancers in a Competition"""
-        self.cursor.execute(f"select * from dancers where competition = {id}")
+        self.cursor.execute(f"select * from dancer where competition = {c_id}")
         results = self.cursor.fetchall()
+        dancers = []
         if results is not None:
-            dancers = []
-            for d in results:
-                dancers.append(sc.Dancer(*d))
-            return dancers
-        else:
-            return []
+            for dancer in results:
+                dancers.append(sc.Dancer(*dancer))
+        return dancers
 
-    def get(self, id):
+    def get(self, iid):
         """Select a single Dancer by id"""
-        self.cursor.execute('select * from dancers where id = %d' % int(id))
+        self.cursor.execute('select * from dancer where id = %d' % int(iid))
         result = self.cursor.fetchone()
         if result is not None:
             return sc.Dancer(*result)
@@ -502,59 +441,60 @@ class TableDancers:
             return None
 
     def new(self, comp_id):
-        dancer = sc.Dancer(0,'','','','','','','','',0,'','','','','','',0,0,comp_id)
+        dancer = sc.Dancer(0,'','','','','','','','',0,today(),'','','','','',0,comp_id)
         return self.insert(dancer)
 
     def insert(self, dancer):
         """Create a new Dancer"""
-        self.cursor.execute('insert into dancers (firstName, lastName,\
-                             scotDanceNum, street, city, state, zip,\
-                             birthdate, age, registeredDate, number, phonenum,\
-                             email, teacher, teacherEmail, dancerCat,\
-                             dancerGroup, competition) values (\"%s\", \"%s\",\
+        self.cursor.execute('insert into dancer (first_name, last_name,\
+                             scot_dance_num, street, city, state, zip,\
+                             birthdate, age, registered_date, competitor_num,\
+                             phone_num, email, teacher, teacher_email,\
+                             dancer_category, competition) values\
+                             (\"%s\", \"%s\",\
                              \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\",\
                              %d, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\",\
-                             \"%s\",%d,%d,%d)' %
-                            (dancer.firstName, dancer.lastName,
-                             dancer.scotDanceNum, dancer.street, dancer.city,
-                             dancer.state, dancer.zipCode, dancer.birthdate,
-                             dancer.age, dancer.registeredDate, dancer.number,
-                             dancer.phonenum, dancer.email, dancer.teacher,
-                             dancer.teacherEmail, dancer.dancerCat,
-                             dancer.dancerGroup, dancer.competition))
-        dancer.id = self.cursor.lastrowid
+                             \"%s\",%d,%d)' %
+                            (dancer.first_name, dancer.last_name,
+                             dancer.scot_dance_num, dancer.street, dancer.city,
+                             dancer.state, dancer.zip, dancer.birthdate,
+                             dancer.age, dancer.registered_date, dancer.competitor_num,
+                             dancer.phone_num, dancer.email, dancer.teacher,
+                             dancer.teacher_email, dancer.dancer_category,
+                             dancer.competition))
+        dancer.iid = self.cursor.lastrowid
         return dancer
 
     def update(self, dancer):
         """Save a Dancer"""
-        self.cursor.execute('update dancers set firstName = \"%s\", lastName =\
-                             \"%s\", scotDanceNum = \"%s\", street  = \"%s\",\
+        self.cursor.execute('update dancer set first_name = \"%s\", last_name =\
+                             \"%s\", scot_dance_num = \"%s\", street  = \"%s\",\
                              city = \"%s\", state = \"%s\", zip = \"%s\",\
-                             birthdate = \"%s\", age = %d, registeredDate =\
-                             \"%s\", number = \"%s\", phonenum = \"%s\",\
-                             email = \"%s\", teacher = \"%s\", teacherEmail =\
-                             \"%s\", dancerCat = %d, dancerGroup = %d,\
+                             birthdate = \"%s\", age = %d, registered_date =\
+                             \"%s\", competitor_num = \"%s\", phone_num = \"%s\",\
+                             email = \"%s\", teacher = \"%s\", teacher_email =\
+                             \"%s\", dancer_category = %d,\
                              competition = %d where id = %d' %
-                            (dancer.firstName, dancer.lastName,
-                             dancer.scotDanceNum, dancer.street, dancer.city,
-                             dancer.state, dancer.zipCode, dancer.birthdate,
-                             dancer.age, dancer.registeredDate, dancer.number,
-                             dancer.phonenum, dancer.email, dancer.teacher,
-                             dancer.teacherEmail, dancer.dancerCat,
-                             dancer.dancerGroup, dancer.competition,
-                             dancer.id))
+                            (dancer.first_name, dancer.last_name,
+                             dancer.scot_dance_num, dancer.street, dancer.city,
+                             dancer.state, dancer.zip, dancer.birthdate,
+                             dancer.age, dancer.registered_date, dancer.competitor_num,
+                             dancer.phone_num, dancer.email, dancer.teacher,
+                             dancer.teacher_email, dancer.dancer_category,
+                             dancer.competition,
+                             dancer.iid))
         self.conn.commit()
         return dancer
 
-    def remove_by_competition(self, id):
+    def remove_by_competition(self, c_id):
         """Delete all Dancers in a Competition"""
-        self.cursor.execute(f"delete from dancers where competition = {id}")
+        self.cursor.execute(f"delete from dancer where competition = {c_id}")
         self.conn.commit()
 
-    def remove(self, id):
+    def remove(self, iid):
         """Delete a single Dancer by id"""
-        self.cursor.execute('delete from dancers where id = %d' % int(id))
-        self.db.tables.groups.unjoin_by_dancer(id)
+        self.cursor.execute('delete from dancers where id = %d' % int(iid))
+        self.db.tables.groups.unjoin_by_dancer(iid)
         self.conn.commit()
 
 
@@ -565,19 +505,17 @@ class TableDances:
 
     def get_all(self):
         """Return all Dances"""
-        self.cursor.execute('select * from dances')
+        self.cursor.execute('select * from dance')
         results = self.cursor.fetchall()
+        dances = []
         if results is not None:
-            dances = []
-            for d in results:
-                dances.append(sc.Dance(*d))
-            return dances
-        else:
-            return []
+            for dance in results:
+                dances.append(sc.Dance(*dance))
+        return dances
 
-    def get(self, id):
+    def get(self, iid):
         """Return a single Dance by id"""
-        self.cursor.execute('select * from dances where id = %d' % int(id))
+        self.cursor.execute('select * from dance where id = %d' % int(iid))
         return sc.Dance(*self.cursor.fetchone())
 
     def new(self):
@@ -586,15 +524,15 @@ class TableDances:
 
     def insert(self, dance):
         """Create a new Dance"""
-        self.cursor.execute(f"insert into dances (name) values\
+        self.cursor.execute(f"insert into dance (name) values\
                             (\"{dance.name}\")")
-        dance.id = self.cursor.lastrowid
+        dance.iid = self.cursor.lastrowid
         return dance
 
     def update(self, dance):
         """Save a Dance"""
-        self.cursor.execute('update dances set name = \"%s\" where id = %d' %
-                            (dance.name, dance.id))
+        self.cursor.execute('update dance set name = \"%s\" where id = %d' %
+                            (dance.name, dance.iid))
         self.conn.commit()
         return dance
 
@@ -604,15 +542,15 @@ class TableScores:
         self.conn = db.conn
         self.cursor = self.conn.cursor()
 
-    def get(self, id):
+    def get(self, iid):
         """Get a single Score item"""
-        self.cursor.execute('select * from scores where id = %d' % int(id))
+        self.cursor.execute('select * from score where id = %d' % int(iid))
         result = self.cursor.fetchone()
         return sc.Score(*result)
 
     def get_by_event_dancer(self, event_id, dancer_id):
         """Return a Dancer's Score in an Event"""
-        self.cursor.execute('select * from scores where event = %d and dancer\
+        self.cursor.execute('select * from score where event = %d and dancer\
                              = %d' % (int(event_id), int(dancer_id)))
         result = self.cursor.fetchone()
         if result is not None:
@@ -620,18 +558,18 @@ class TableScores:
         else:
             return None
 
-    def get_by_event(self, id):
+    def get_by_event(self, event_id):
         """Return a list of all Scores from an Event"""
-        self.cursor.execute('select * from scores where event = %d' % id)
+        self.cursor.execute('select * from score where event = %d' % event_id)
         results = self.cursor.fetchall()
         scores = []
         for s in results:
             scores.append(sc.Score(*s))
         return scores
 
-    def exists_for_event(self, id):
+    def exists_for_event(self, event_id):
         """Verify if there are any Scores for an Event"""
-        scores = self.get_by_event(id)
+        scores = self.get_by_event(event_id)
         if scores is None or scores == []:
             return False
         else:
@@ -639,7 +577,7 @@ class TableScores:
 
     def get_by_event_judge(self, event_id, judge_id):
         """Return a list of all Scores from an Event and judge by id"""
-        self.cursor.execute('select * from scores where event = %d and\
+        self.cursor.execute('select * from score where event = %d and\
                             judge = %d' % (event_id, judge_id))
         results = self.cursor.fetchall()
         scores = []
@@ -661,30 +599,30 @@ class TableScores:
 
     def insert(self, score):
         """Create a new Score item"""
-        self.cursor.execute(f"insert into scores (dancer, event, judge,\
+        self.cursor.execute(f"insert into score (dancer, event, judge,\
                             competition, score) values ({score.dancer},\
                             {score.event}, {score.judge}, {score.competition},\
                             {score.score})")
-        score.id = self.cursor.lastrowid
+        score.iid = self.cursor.lastrowid
         return score
 
     def update(self, score):
         """Save a Score"""
-        self.cursor.execute('update scores set dancer = %d, event = %d, judge\
+        self.cursor.execute('update score set dancer = %d, event = %d, judge\
                              = %d, competition = %d, score = %f where id = %d'
                             % (score.dancer, score.event, score.judge,
-                               score.competition, score.score, score.id))
+                               score.competition, score.score, score.iid))
         self.conn.commit()
         return score
 
-    def remove_by_event(self, id):
+    def remove_by_event(self, event_id):
         """Delete all Scores in an Event"""
-        self.cursor.execute('delete from scores where event = %d' % id)
+        self.cursor.execute('delete from score where event = %d' % event_id)
         self.conn.commit()
 
     def remove_by_event_judge(self, event_id, judge_id):
         """Remove every Score that has been entered for a Judge in an Event"""
-        self.cursor.execute('delete from scores where event = %d and judge =\
+        self.cursor.execute('delete from score where event = %d and judge =\
                              %d' % (event_id, judge_id))
         self.conn.commit()
 
@@ -695,66 +633,68 @@ class TableEvents:
         self.conn = db.conn
         self.cursor = self.conn.cursor()
 
-    def get_by_competition(self, id):
-        self.cursor.execute(f"select * from events where competition = {id}")
+    def get_by_competition(self, c_id):
+        self.cursor.execute(f"select * from event where competition = {c_id}")
         results = self.cursor.fetchall()
         events = []
-        for e in results:
+        for event in results:
+            event_obj = sc.Event(*event)
             if self.db.settings.verbose:
-                print(*e)
-            events.append(sc.Event(*e))
+                print(event_obj)
+            events.append(event_obj)
         return events
 
-    def get_by_group(self, id):
-        self.cursor.execute(f"select * from events where dancerGroup = {id}")
+    def get_by_group(self, group_id):
+        self.cursor.execute(f"select * from event where dancer_group = {group_id}")
         results = self.cursor.fetchall()
         events = []
-        for e in results:
+        for event in results:
+            event_obj = sc.Event(*event)
             if self.db.settings.verbose:
-                print(*e)
-            events.append(sc.Event(*e))
+                print(event_obj)
+            events.append(event_obj)
         return events
 
-    def get(self, id):
-        self.cursor.execute('select * from events where id = %d' % int(id))
+    def get(self, iid):
+        self.cursor.execute('select * from event where id = %d' % int(iid))
         return sc.Event(*self.cursor.fetchone())
 
-    def new(self, dancerGroup_id=0, comp_id=0):
-        event = sc.Event(0, '', dancerGroup_id, 0, comp_id, 1, 6, 1)
+    def new(self, dancer_group_id=0, comp_id=0):
+        event = sc.Event(0, '', dancer_group_id, 0, comp_id, 1, 6, 1)
         return self.insert(event)
 
     def insert(self, event):
-        self.cursor.execute(f"insert into events (name, dancerGroup, dance,\
-                            competition, countsForOverall, numPlaces,\
-                            earnsStamp) values (\'{event.name}\',\
-                            {event.dancerGroup}, {event.dance},\
-                            {event.competition}, {event.countsForOverall},\
-                            {event.numPlaces}, {event.earnsStamp})")
-        event.id = self.cursor.lastrowid
+        self.cursor.execute(f"insert into event (name, dancer_group, dance,\
+                            competition, counts_for_overall, num_places,\
+                            earns_stamp) values (\'{event.name}\',\
+                            {event.dancer_group}, {event.dance},\
+                            {event.competition}, {event.counts_for_overall},\
+                            {event.num_places}, {event.earns_stamp})")
+        event.iid = self.cursor.lastrowid
         return event
 
     def update(self, event):
         if self.db.settings.verbose:
             print(f"DB TableEvents Update: {event.name}")
-        self.cursor.execute('update events set name = \"%s\", dancerGroup =\
+        self.cursor.execute('update event set name = \"%s\", dancer_group =\
                              %d, dance = %d, competition = %d,\
-                             countsForOverall = %d, numPlaces = %d,\
-                             earnsStamp = %d where id = %d' %
-                            (event.name, event.dancerGroup, event.dance,
-                             event.competition, event.countsForOverall,
-                             event.numPlaces, event.earnsStamp, event.id))
+                             counts_for_overall = %d, num_places = %d,\
+                             earns_stamp = %d where id = %d' %
+                            (event.name, event.dancer_group, event.dance,
+                             event.competition, event.counts_for_overall,
+                             event.num_places, event.earns_stamp, event.iid))
         self.conn.commit()
         return event
 
-    def remove(self, id):
-        self.cursor.execute('delete from events where id = %d' % id)
-        self.db.tables.scores.remove_by_event(id)
+    def remove(self, iid):
+        self.cursor.execute('delete from event where id = %d' % iid)
+        self.db.tables.scores.remove_by_event(iid)
         self.conn.commit()
 
-    def remove_by_competition(self, id):
-        events = self.get_by_competition(id)
-        for e in events:
-            self.remove(e.id)
+    def remove_by_competition(self, c_id):
+        events = self.get_by_competition(c_id)
+        for event in events:
+            self.remove(event.iid)
 
 
 class TableCategories:
@@ -763,56 +703,56 @@ class TableCategories:
         self.cursor = self.conn.cursor()
 
     def get_all(self):
-        """Return a list of all DancerCats"""
-        self.cursor.execute('select * from dancerCats')
+        """Return a list of all DancerCategorys"""
+        self.cursor.execute('select * from dancer_category')
         result = self.cursor.fetchall()
+        categories = []
         if result is not None:
-            categories = []
             for c in result:
-                categories.append(sc.DancerCat(*c))
-            return categories
-        else:
-            return None
+                categories.append(sc.DancerCategory(*c))
+        return categories
 
-    def get(self, id):
-        self.cursor.execute('select * from dancerCats where id = %d' % int(id))
+    def get(self, iid):
+        self.cursor.execute('select * from dancer_category where id = %d'
+                            % int(iid))
         result = self.cursor.fetchone()
         if result is not None:
-            return sc.DancerCat(*result)
+            return sc.DancerCategory(*result)
         else:
             return None
 
     def get_by_name(self, cname):
-        self.cursor.execute('select * from dancerCats where name like \"%%%s\"'
-                            % cname)
+        self.cursor.execute('select * from dancer_category where name like\
+                            \"%%%s\"' % cname)
         result = self.cursor.fetchone()
         if result is not None:
-            return sc.DancerCat(*result)
+            return sc.DancerCategory(*result)
         else:
             return None
 
     def new(self):
-        category = sc.DancerCat(0, '', '', 0)
+        category = sc.DancerCategory(0, '', '', 0)
         return self.insert(category)
 
     def insert(self, category):
-        """Add a new DancerCat object into the DB"""
-        self.cursor.execute(f"insert into dancerCats (name, abbrev, protected)\
+        """Add a new DancerCategory object into the DB"""
+        self.cursor.execute(f"insert into dancer_category\
+                            (name, abbrev, protected)\
                             values ('{category.name}', '{category.abbrev}',\
                             {category.protected})")
-        category.id = self.cursor.lastrowid
+        category.iid = self.cursor.lastrowid
         return category
 
     def update(self, category):
-        self.cursor.execute('update dancerCats set name = \"%s\", abbrev =\
-                            \"%s\", protected = %d where id =%d' %
+        self.cursor.execute('update dancer_category set name = \"%s\",\
+                            abbrev = \"%s\", protected = %d where id =%d' %
                             (category.name, category.abbrev,
-                             category.protected, category.id))
+                             category.protected, category.iid))
         self.conn.commit()
         return category
 
-    def remove(self, id):
-        self.cursor.execute('delete from dancerCats where id = %d' % id)
+    def remove(self, iid):
+        self.cursor.execute('delete from dancer_category where id = %d' % iid)
         self.conn.commit()
 
 
@@ -822,7 +762,7 @@ class TablePlaceValues:
         self.cursor = self.conn.cursor()
 
     def get(self, place):
-        self.cursor.execute('select place, points from placeValues where\
+        self.cursor.execute('select place, points from place_value where\
                             place = %d' % int(place))
         result = self.cursor.fetchone()
         if result is not None:
@@ -831,7 +771,7 @@ class TablePlaceValues:
             return None
 
     def get_all(self):
-        self.cursor.execute('select place, points from placeValues')
+        self.cursor.execute('select place, points from place_value')
         results = self.cursor.fetchall()
         values = []
         for pv in results:
@@ -842,11 +782,11 @@ class TablePlaceValues:
         place_value = sc.PlaceValue(0, 0)
         return self.insert(place_value)
 
-    def insert(self, placeValue):
-        self.cursor.execute('insert into placeValues (place, points) values\
-                            (%d,%d)' % (placeValue.place, placeValue.points))
-        return placeValue
+    def insert(self, place_value):
+        self.cursor.execute('insert into place_value (place, points) values\
+                            (%d,%d)' % (place_value.place, place_value.points))
+        return place_value
 
     def insert_table(self):
-        self.cursor.execute('create table if not exists placeValues (place\
+        self.cursor.execute('create table if not exists place_value (place\
                             integer primary key not null, points integer);')

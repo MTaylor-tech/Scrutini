@@ -3,7 +3,7 @@
 */
 
 -- Competition Types include Regular, Championship, and Premiership and defines how scoring is done and number of judges
-create table competitionTypes (
+create table competition_types (
 	id			integer primary key	autoincrement not null,
 	name		text,
 	abbrev		text,
@@ -19,7 +19,7 @@ create table competitions (
     eventDate   date,
     deadline    date,
     location    text,
-    competitionType		integer,
+    competition_type		integer,
     isChampionship integer
 );
 
@@ -45,10 +45,10 @@ create table placeValues (
 create table events (
     id          integer primary key autoincrement not null,
     name        text,
-    dancerGroup integer,
+    dancer_group integer,
     dance       integer,
     competition integer,
-    countsForOverall integer,
+    counts_for_overall integer,
     numPlaces   integer,
     earnsStamp  integer
 );
@@ -71,7 +71,7 @@ create table dancerCats (
 
 -- Dancer Groups are age groupings within the Dancer Categories
 -- Additional Dancer Groups can be made that are for special awards
-create table dancerGroups (
+create table dancer_groups (
     id          integer primary key autoincrement not null,
     name        text,
     ageMin      integer,
@@ -83,16 +83,16 @@ create table dancerGroups (
 
 -- This join table is used to link Dancers with DancerGroups so that there can be many
 -- Dancers in each Group and a Dancer can be in many Groups
-create table dancerGroupJoin (
+create table dancer_groupJoin (
     dancer       integer,
-    dancerGroup    integer
+    dancer_group    integer
 );
 
 -- This join table is used to group Events with Dancer Groups
 create table eventGroupJoin (
     id          integer primary key autoincrement not null,
     event       integer,
-    dancerGroup integer,
+    dancer_group integer,
     competition integer
 );
 
@@ -115,7 +115,7 @@ create table dancers (
     teacher		text,
     teacherEmail text,
     dancerCat   integer,
-    dancerGroup integer,
+    dancer_group integer,
     competition integer
 );
 

@@ -1,3 +1,6 @@
+import os
+import csv
+import datetime
 from PyQt5.QtWidgets import QPushButton, QMessageBox
 
 
@@ -39,13 +42,14 @@ def on_button_clicked(sender):
 
 
 def verify(prompt='Are you sure?', subprompt=''):
+    """Double-check an important decision with the user."""
     alert = QMessageBox()
     alert.setText(prompt)
     alert.setInformativeText(subprompt)
     alert.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
     alert.setEscapeButton(QMessageBox.Cancel)
-    buttonReply = alert.exec_()
-    if buttonReply == QMessageBox.Yes:
+    button_reply = alert.exec_()
+    if button_reply == QMessageBox.Yes:
         print('Yes clicked.')
         return True
     else:
@@ -54,17 +58,19 @@ def verify(prompt='Are you sure?', subprompt=''):
 
 
 def ask_save(prompt='Do you want to save your changes?', subprompt=''):
+    """"Ask the user if they want to save and return their answer."""
     alert = QMessageBox()
     alert.setText(prompt)
     alert.setInformativeText(subprompt)
-    alert.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+    alert.setStandardButtons(QMessageBox.Save | QMessageBox.Discard
+                             | QMessageBox.Cancel)
     alert.setDefaultButton(QMessageBox.Save)
     alert.setEscapeButton(QMessageBox.Cancel)
-    buttonReply = alert.exec_()
-    if buttonReply == QMessageBox.Save:
+    button_reply = alert.exec_()
+    if button_reply == QMessageBox.Save:
         print('Save clicked.')
         return 'save'
-    elif buttonReply == QMessageBox.Discard:
+    elif button_reply == QMessageBox.Discard:
         print('Discard clicked')
         return 'discard'
     else:
@@ -73,8 +79,44 @@ def ask_save(prompt='Do you want to save your changes?', subprompt=''):
 
 
 def is_float(string):
+    """Verify that the value of the string can be cast to a float."""
     try:
         val = float(string)
-        return True
+        return val == val
     except ValueError:
         return False
+
+
+def retrieve_csv_dict(csv_filename):
+    """Return a dictionary with the data from the csv."""
+    if os.path.exists(csv_filename):
+        with open(csv_filename, newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            return reader
+    else:
+        print('File not found.')
+        return None
+
+
+def retrieve_csv_keys(csv_filename):
+    """Grab the column names as dictionary keys from the csv."""
+    if os.path.exists(csv_filename):
+        with open(csv_filename, newline='') as csvfile:
+            reader = csv.reader(csvfile)
+            return next(reader)
+    else:
+        print('File not found.')
+        return None
+
+
+def today():
+    """Grab today's date."""
+    return datetime.date.today()
+
+
+def get_formatted_date(date):
+    """Return a nicely formatted date like: 22 May 2021."""
+    format_str = '%d %b %Y'
+    otherformat_str = '%Y-%m-%d'
+    return (datetime.datetime.strftime(datetime.datetime.strptime(
+        ('%s' % date)[0:10], otherformat_str).date(), format_str))

@@ -5,16 +5,16 @@ import PyQt5.QtGui as qg
 from sWidgets import verify, ask_save
 
 class DancerEditor(qt.QDialog):
-    def __init__(self, main_window, comp_id, db):
+    def __init__(self, main_window, competition_id, db):
         super(DancerEditor, self).__init__()
         self.main_window = main_window
         self.main_window.setCentralWidget(self)
-        self.comp_id = comp_id
+        self.competition_id = competition_id
         self.db = db
         self.changes_made = False
         self.resize(1680, 1000)
         self.layout = qt.QVBoxLayout()
-        self.dancers = self.db.tables.dancers.get_by_competition(comp_id)
+        self.dancers = self.db.t.dancer.get_by_competition(competition_id)
         self.table_dancers = qt.QTableWidget()
         self.headers = ['First Name', 'Last Name', 'Num', 'Category',
                         'Groups', 'ScotDance#', 'Address', 'City', 'ST',
@@ -33,121 +33,100 @@ class DancerEditor(qt.QDialog):
         row = 0
         # id, firstName, lastName, scotDanceNum, street, city, state,
         # zipCode, birthdate, age, registeredDate, number, phonenum, email,
-        # teacher, teacherEmail, dancerCat, dancerGroup, competition
+        # teacher, teacherEmail, dancerCat, dancer_group, competition
         for dancer in self.dancers:
-            item_first_name = qt.QTableWidgetItem(dancer.firstName)
-            item_last_name = qt.QTableWidgetItem(dancer.lastName)
-            item_number = qt.QTableWidgetItem(dancer.number)
-            selector_dancerCat = qt.QComboBox()
-            dancerCats = self.db.tables.categories.get_all()
-            for dancerCat in dancerCats:
-                selector_dancerCat.addItem(dancerCat.name)
+            item_first_name = qt.QTableWidgetItem(dancer.first_name)
+            item_last_name = qt.QTableWidgetItem(dancer.last_name)
+            item_number = qt.QTableWidgetItem(dancer.competitor_num)
+            selector_category = qt.QComboBox()
+            categories = self.db.t.category.get_all()
+            for category in categories:
+                selector_category.addItem(category.name)
                 if self.db.settings.verbose:
-                    print('Category: %d [%s]' % (dancerCat.id, dancerCat.name))
-            if dancer.dancerCat is not None:
-                selector_dancerCat.setCurrentIndex(dancer.dancerCat)
+                    print('Category: %d [%s]' % (category.iid, category.name))
+            if dancer.dancer_category is not None:
+                selector_category.setCurrentIndex(dancer.dancer_category)
             else:
-                selector_dancerCat.setCurrentIndex(0)
-            dancerCat = self.db.tables.categories.get(dancer.dancerCat)
-            # if dancerCat is not None:
-            #     dancerCat_name = dancerCat.name
-            # else:
-            #     dancerCat_name = ''
-            item_cat_id = qt.QTableWidgetItem(dancer.dancerCat)
-            dancer_groups = self.db.tables.groups.get_by_dancer(dancer.id)
+                selector_category.setCurrentIndex(0)
+            category = self.db.t.category.get(dancer.dancer_category)
+            item_cat_id = qt.QTableWidgetItem(dancer.dancer_category)
+            dancer_groups = self.db.t.group.get_by_dancer(dancer.iid)
             dancer_group_list = ''
             for group in dancer_groups:
                 if dancer_group_list != '':
                     dancer_group_list += ', '
                 dancer_group_list += group.abbrev
             item_groups = qt.QTableWidgetItem(dancer_group_list)
-
-            item_scotdance = qt.QTableWidgetItem(dancer.scotDanceNum)
+            item_scotdance = qt.QTableWidgetItem(dancer.scot_dance_num)
             item_address = qt.QTableWidgetItem(dancer.street)
             item_city = qt.QTableWidgetItem(dancer.city)
             item_state = qt.QTableWidgetItem(dancer.state)
-            item_zipCode = qt.QTableWidgetItem(dancer.zipCode)
-
-            # if ((dancer.birthdate != '') and (dancer.birthdate != None)):
-            #    item_birthdate = QTableWidgetItem(self.get_formatted_date(dancer.birthdate))
-            # else:
-            #    item_birthdate = QTableWidgetItem('')
+            item_zip = qt.QTableWidgetItem(dancer.zip)
             item_birthdate = qt.QTableWidgetItem(dancer.birthdate)
-
-            if type(dancer.age) == int:
-                item_age = qt.QTableWidgetItem(('%d' % dancer.age))
-            elif dancer.age is not None:
-                item_age = qt.QTableWidgetItem(dancer.age)
+            if dancer.age is not None:
+                item_age = qt.QTableWidgetItem(f"{dancer.age}")
             else:
                 item_age = qt.QTableWidgetItem('')
-
-            #if ((dancer.registeredDate != '') and (dancer.registeredDate != None)):
-            #    item_entryrcvd = QTableWidgetItem(self.get_formatted_date(dancer.registeredDate))
-            #else:
-            #    item_entryrcvd = QTableWidgetItem('')
-            item_entryrcvd = qt.QTableWidgetItem(dancer.registeredDate)
-
-            item_phonenum = qt.QTableWidgetItem(dancer.phonenum)
+            item_entryrcvd = qt.QTableWidgetItem(dancer.registered_date)
+            item_phone_num = qt.QTableWidgetItem(dancer.phone_num)
             item_email = qt.QTableWidgetItem(dancer.email)
             item_teacher = qt.QTableWidgetItem(dancer.teacher)
-            item_teacherEmail = qt.QTableWidgetItem(dancer.teacherEmail)
-            item_dancer_id = qt.QTableWidgetItem(('%d' % dancer.id))
-
+            item_teacher_email = qt.QTableWidgetItem(dancer.teacher_email)
+            item_dancer_id = qt.QTableWidgetItem(('%d' % dancer.iid))
             self.table_dancers.setRowCount(row+1)
             self.table_dancers.setItem(row,  0, item_first_name)
             self.table_dancers.setItem(row,  1, item_last_name)
             self.table_dancers.setItem(row,  2, item_number)
-            self.table_dancers.setCellWidget(row, 3, selector_dancerCat)
+            self.table_dancers.setCellWidget(row, 3, selector_category)
             self.table_dancers.setItem(row,  4, item_groups)
             self.table_dancers.setItem(row,  5, item_scotdance)
             self.table_dancers.setItem(row,  6, item_address)
             self.table_dancers.setItem(row,  7, item_city)
             self.table_dancers.setItem(row,  8, item_state)
-            self.table_dancers.setItem(row,  9, item_zipCode)
+            self.table_dancers.setItem(row,  9, item_zip)
             self.table_dancers.setItem(row, 10, item_birthdate)
             self.table_dancers.setItem(row, 11, item_age)
             self.table_dancers.setItem(row, 12, item_entryrcvd)
-            self.table_dancers.setItem(row, 13, item_phonenum)
+            self.table_dancers.setItem(row, 13, item_phone_num)
             self.table_dancers.setItem(row, 14, item_email)
             self.table_dancers.setItem(row, 15, item_teacher)
-            self.table_dancers.setItem(row, 16, item_teacherEmail)
+            self.table_dancers.setItem(row, 16, item_teacher_email)
             self.table_dancers.setItem(row, 17, item_dancer_id)
             self.table_dancers.setItem(row, 18, item_cat_id)
-
             row += 1
         self.table_dancers.setColumnHidden(17, True)
         self.table_dancers.setColumnHidden(18, True)
         self.table_dancers.setSortingEnabled(True)
         self.table_dancers.itemChanged.connect(self.item_changed)
         self.layout.addWidget(self.table_dancers)
-        self.newButton = qt.QPushButton('&New Competitor')
-        self.newButton.clicked.connect(self.new_dancer)
-        self.layout.addWidget(self.newButton)
-        self.deleteButton = qt.QPushButton('&Delete Selected Competitor')
-        self.deleteButton.clicked.connect(self.delete_dancer)
-        self.layout.addWidget(self.deleteButton)
-        self.saveButton = qt.QPushButton('&Save')
-        self.saveButton.clicked.connect(self.save_button)
-        self.layout.addWidget(self.saveButton)
-        self.exitButton = qt.QPushButton('E&xit')
-        self.exitButton.clicked.connect(self.cancel_button)
-        self.layout.addWidget(self.exitButton)
+        self.new_button = qt.QPushButton('&New Competitor')
+        self.new_button.clicked.connect(self.new_dancer)
+        self.layout.addWidget(self.new_button)
+        self.delete_button = qt.QPushButton('&Delete Selected Competitor')
+        self.delete_button.clicked.connect(self.delete_dancer)
+        self.layout.addWidget(self.delete_button)
+        self.save_btn = qt.QPushButton('&Save')
+        self.save_btn.clicked.connect(self.save_button)
+        self.layout.addWidget(self.save_btn)
+        self.exit_button = qt.QPushButton('E&xit')
+        self.exit_button.clicked.connect(self.cancel_button)
+        self.layout.addWidget(self.exit_button)
         self.setWindowModality(qc.Qt.ApplicationModal)
         self.setLayout(self.layout)
 
     def item_changed(self, sender=None):
-        print('Item changed')
         self.changes_made = True
 
     def cancel_button(self, sender=None):
-        if (self.changes_made):
-            saveResult = ask_save()
+        if self.changes_made:
+            save_result = ask_save()
         else:
-            saveResult = 'discard'
-
-        if (saveResult == 'discard'):
+            save_result = 'discard'
+        if self.db.settings.verbose:
+            print(save_result)
+        if saveResult == 'discard':
             self.hide()
-        elif (saveResult == 'save'):
+        elif saveResult == 'save':
             self.save_button()
             self.hide()
         else:
@@ -157,77 +136,67 @@ class DancerEditor(qt.QDialog):
         row = self.table_dancers.rowCount()
         # id, firstName, lastName, scotDanceNum, street, city, state, zipCode,
         # birthdate, age, registeredDate, number, phonenum, email, teacher,
-        # teacherEmail, dancerCat, dancerGroup, competition
-        dancer = self.db.tables.dancers.new()
+        # teacherEmail, dancerCat, dancer_group, competition
+        dancer = self.db.t.dancer.new()
         self.table_dancers.insertRow(row)
-        item_first_name = qt.QTableWidgetItem(dancer.firstName)
-        item_last_name = qt.QTableWidgetItem(dancer.lastName)
-        item_number = qt.QTableWidgetItem(dancer.number)
-
-        selector_dancerCat = qt.QComboBox()
-        dancerCats = self.db.tables.categories.get_all()
-        for dancerCat in dancerCats:
-            selector_dancerCat.addItem(dancerCat.name)
-            if self.db.settings.verbose:
-                print('Category: %d [%s]' % (dancerCat.id, dancerCat.name))
-        if dancer.dancerCat is not None:
-            selector_dancerCat.setCurrentIndex(dancer.dancerCat)
+        item_first_name = qt.QTableWidgetItem(dancer.first_name)
+        item_last_name = qt.QTableWidgetItem(dancer.last_name)
+        item_number = qt.QTableWidgetItem(dancer.competitor_num)
+        selector_category = qt.QComboBox()
+        categories = self.db.t.category.get_all()
+        for category in categories:
+            selector_category.addItem(category.name)
+        if dancer.dancer_category is not None:
+            selector_category.setCurrentIndex(dancer.dancer_category)
         else:
-            selector_dancerCat.setCurrentIndex(0)
-        dancerCat = self.db.tables.categories.get(dancer.dancerCat)
-        if dancerCat is not None:
-            dancerCat_name = dancerCat.name
+            selector_category.setCurrentIndex(0)
+        category = self.db.t.category.get(dancer.dancer_category)
+        if category is not None:
+            category_name = category.name
         else:
-            dancerCat_name = ''
+            category_name = ''
         # item_cat = qt.QTableWidgetItem(dancerCat_name)
-        item_cat_id = qt.QTableWidgetItem(dancer.dancerCat)
-
-        dancer_groups = self.db.tables.groups.get_by_dancer(dancer.id)
+        item_cat_id = qt.QTableWidgetItem(dancer.dancer_category)
+        dancer_groups = self.db.t.group.get_by_dancer(dancer.iid)
         dancer_group_list = ''
         for group in dancer_groups:
             if dancer_group_list != '':
                 dancer_group_list += ', '
             dancer_group_list += group.abbrev
         item_groups = qt.QTableWidgetItem(dancer_group_list)
-
-        item_scotdance = qt.QTableWidgetItem(dancer.scotDanceNum)
+        item_scotdance = qt.QTableWidgetItem(dancer.scot_dance_num)
         item_address = qt.QTableWidgetItem(dancer.street)
         item_city = qt.QTableWidgetItem(dancer.city)
         item_state = qt.QTableWidgetItem(dancer.state)
-        item_zipCode = qt.QTableWidgetItem(dancer.zipCode)
+        item_zip = qt.QTableWidgetItem(dancer.zip)
         item_birthdate = qt.QTableWidgetItem(dancer.birthdate)
-
-        if type(dancer.age) == int:
-            item_age = qt.QTableWidgetItem(('%d' % dancer.age))
-        elif dancer.age is not None:
-            item_age = qt.QTableWidgetItem(dancer.age)
+        if dancer.age is not None:
+            item_age = qt.QTableWidgetItem(f"{dancer.age}")
         else:
             item_age = qt.QTableWidgetItem('')
-        item_entryrcvd = qt.QTableWidgetItem(dancer.registeredDate)
-
-        item_phonenum = qt.QTableWidgetItem(dancer.phonenum)
+        item_entryrcvd = qt.QTableWidgetItem(dancer.registered_date)
+        item_phone_num = qt.QTableWidgetItem(dancer.phone_num)
         item_email = qt.QTableWidgetItem(dancer.email)
         item_teacher = qt.QTableWidgetItem(dancer.teacher)
-        item_teacherEmail = qt.QTableWidgetItem(dancer.teacherEmail)
-        item_dancer_id = qt.QTableWidgetItem(('%d' % dancer.id))
-
+        item_teacher_email = qt.QTableWidgetItem(dancer.teacher_email)
+        item_dancer_id = qt.QTableWidgetItem(('%d' % dancer.iid))
         self.table_dancers.setItem(row,  0, item_first_name)
         self.table_dancers.setItem(row,  1, item_last_name)
         self.table_dancers.setItem(row,  2, item_number)
-        self.table_dancers.setCellWidget(row, 3, selector_dancerCat)
+        self.table_dancers.setCellWidget(row, 3, selector_category)
         self.table_dancers.setItem(row,  4, item_groups)
         self.table_dancers.setItem(row,  5, item_scotdance)
         self.table_dancers.setItem(row,  6, item_address)
         self.table_dancers.setItem(row,  7, item_city)
         self.table_dancers.setItem(row,  8, item_state)
-        self.table_dancers.setItem(row,  9, item_zipCode)
+        self.table_dancers.setItem(row,  9, item_zip)
         self.table_dancers.setItem(row, 10, item_birthdate)
         self.table_dancers.setItem(row, 11, item_age)
         self.table_dancers.setItem(row, 12, item_entryrcvd)
-        self.table_dancers.setItem(row, 13, item_phonenum)
+        self.table_dancers.setItem(row, 13, item_phone_num)
         self.table_dancers.setItem(row, 14, item_email)
         self.table_dancers.setItem(row, 15, item_teacher)
-        self.table_dancers.setItem(row, 16, item_teacherEmail)
+        self.table_dancers.setItem(row, 16, item_teacher_email)
         self.table_dancers.setItem(row, 17, item_dancer_id)
         self.table_dancers.setItem(row, 18, item_cat_id)
         self.table_dancers.scrollToItem(self.table_dancers.item(row, 0))
@@ -236,15 +205,16 @@ class DancerEditor(qt.QDialog):
     def delete_dancer(self, sender=None):
         row = self.table_dancers.currentRow()
         if row is not None:
-            dancer = self.db.tables.dancers.get(int(self.table_dancers.item(row, 17).text()))
+            dancer = self.db.t.dancer.get(
+                int(self.table_dancers.item(row, 17).text()))
             if dancer is not None:
-                verity = verify(('Are you sure you want to delete dancer %s\
-                                 %s?' % (dancer.firstName, dancer.lastName)),
-                                'This will delete all data for the given\
-                                competitor. This cannot be undone.')
+                verity = verify(('Are you sure you want to delete dancer %s '\
+                                 '%s?' % (dancer.first_name, dancer.last_name)),
+                                 'This will delete all data for the given '\
+                                 'competitor. This cannot be undone.')
                 if verity:
-                    print('Will delete dancer %d' % dancer.id)
-                    self.db.tables.dancers.remove(dancer.id)
+                    print('Will delete dancer %d' % dancer.iid)
+                    self.db.t.dancer.remove(dancer.iid)
                     self.table_dancers.removeRow(row)
                 else:
                     print('Nothing deleted')
@@ -254,67 +224,69 @@ class DancerEditor(qt.QDialog):
         row = 0
         while row < self.table_dancers.rowCount():
             dancer_id = int(self.table_dancers.item(row, 17).text())
-            dancer = self.db.tables.dancers.get(dancer_id)
-            dancer.firstName = self.table_dancers.item(row, 0).text()
-            dancer.lastName = self.table_dancers.item(row, 1).text()
-            dancer.number = self.table_dancers.item(row, 2).text()
-
-            dancer.scotDanceNum = self.table_dancers.item(row, 5).text()
+            dancer = self.db.t.dancer.get(dancer_id)
+            dancer.first_name = self.table_dancers.item(row, 0).text()
+            dancer.last_name = self.table_dancers.item(row, 1).text()
+            dancer.competitor_num = self.table_dancers.item(row, 2).text()
+            dancer.scot_dance_num = self.table_dancers.item(row, 5).text()
             dancer.street = self.table_dancers.item(row, 6).text()
             dancer.city = self.table_dancers.item(row, 7).text()
             dancer.state = self.table_dancers.item(row, 8).text()
-            dancer.zipCode = self.table_dancers.item(row, 9).text()
+            dancer.zip = self.table_dancers.item(row, 9).text()
             dancer.birthdate = self.table_dancers.item(row, 10).text()
             dancer_age = self.table_dancers.item(row, 11).text()
             if dancer_age.isdigit():
                 dancer.age = int(dancer_age)
-            dancer.registeredDate = self.table_dancers.item(row, 12).text()
-            dancer.phonenum = self.table_dancers.item(row, 13).text()
+            dancer.registered_date = self.table_dancers.item(row, 12).text()
+            dancer.phone_num = self.table_dancers.item(row, 13).text()
             dancer.email = self.table_dancers.item(row, 14).text()
             dancer.teacher = self.table_dancers.item(row, 15).text()
-            dancer.teacherEmail = self.table_dancers.item(row, 16).text()
-
-            selector_dancerCat = self.table_dancers.cellWidget(row, 3)
-            if selector_dancerCat.currentIndex() > 0:
-                dancer.dancerCat = selector_dancerCat.currentIndex()
-            #item_cat = self.table_dancers.item(row, 18).text()
-            #if (item_cat.isdigit()):
-            #    dancer.dancerCat = int(item_cat)
-
+            dancer.teacher_email = self.table_dancers.item(row, 16).text()
+            selector_category = self.table_dancers.cellWidget(row, 3)
+            if selector_category.currentIndex() > 0:
+                dancer.dancer_category = selector_category.currentIndex()
             dancer_groups_text = self.table_dancers.item(row, 4).text()
             dancer_groups_text = ''.join(dancer_groups_text.split())
             if dancer_groups_text != '':
                 dancer_groups_abbrev = dancer_groups_text.split(',')
-                already_in_groups = self.db.tables.groups.get_by_dancer(dancer_id)
+                already_in_groups = self.db.t.group.get_by_dancer(dancer_id)
                 already_in_abbrevs = []
                 for group in already_in_groups:
                     if group is not None:
                         already_in_abbrevs.append(group.abbrev)
                 for abbrev in dancer_groups_abbrev:
                     if abbrev in already_in_abbrevs:
-                        print('Dancer %s %s is already in group [%s] and should remain' % (dancer.firstName, dancer.lastName, abbrev))
+                        if self.db.settings.verbose:
+                            print('Dancer %s %s is already in group [%s] and '\
+                                  'should remain' % (dancer.first_name,
+                                                     dancer.last_name, abbrev))
                     else:
-                        print('Dancer %s %s is not in group [%s] and should be added' % (dancer.firstName, dancer.lastName, abbrev))
-                        dancerGroup = self.db.tables.groups.get_by_abbrev(
-                                                        abbrev, self.comp_id)
-                        if dancerGroup is not None:
-                            self.db.tables.groups.join(dancer.id, dancerGroup.id)
+                        if self.db.settings.verbose:
+                            print('Dancer %s %s is not in group [%s] and '
+                                  'should be added' % (dancer.first_name,
+                                                       dancer.last_name,
+                                                       abbrev))
+                        dancer_group = self.db.t.group.get_by_abbrev(
+                                                        abbrev,
+                                                        self.competition_id)
+                        if dancer_group is not None:
+                            self.db.t.group.join(dancer.iid, dancer_group.iid)
                 for abbrev in already_in_abbrevs:
                     if abbrev in dancer_groups_abbrev:
-                        print('Dancer %s %s is already in group [%s] and should remain' % (dancer.firstName, dancer.lastName, abbrev))
+                        if self.db.settings.verbose:
+                            print('Dancer %s %s is already in group [%s] and '
+                                  'should remain' % (dancer.first_name,
+                                                     dancer.last_name, abbrev))
                     else:
-                        print('Dancer %s %s is in group [%s] and should be removed' % (dancer.firstName, dancer.lastName, abbrev))
-                        dancerGroup = self.db.tables.groups.get_by_abbrev(
-                                                        abbrev, self.comp_id)
-                        if dancerGroup is not None:
-                            self.db.tables.groups.unjoin(dancer.id, dancerGroup.id)
-
-            self.db.tables.dancers.update(dancer)
-
+                        if self.db.settings.verbose:
+                            print('Dancer %s %s is in group [%s] and should '
+                                  'be removed' % (dancer.first_name,
+                                                  dancer.last_name, abbrev))
+                        dancer_group = self.db.t.group.get_by_abbrev(
+                                                        abbrev,
+                                                        self.competition_id)
+                        if dancer_group is not None:
+                            self.db.t.group.unjoin(dancer.iid, dancer_group.iid)
+            self.db.t.dancer.update(dancer)
             row += 1
         self.changes_made = False
-
-    def get_formatted_date(self, date):
-        format_str = '%d %b %Y'
-        otherformat_str = '%Y-%m-%d'
-        return (datetime.datetime.strftime(datetime.datetime.strptime(('%s' % date)[0:10], otherformat_str).date(), format_str))

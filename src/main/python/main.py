@@ -1,6 +1,5 @@
 """Scrutini Main."""
 import argparse
-import json
 import os
 import gui
 from db import SCDatabase
