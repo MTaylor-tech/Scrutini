@@ -23,7 +23,7 @@ class SMainWindow(qt.QMainWindow):
         # label_text = ''
         self.label = qt.QLabel('')
         # self.toolbar = self.addToolBar(qc.Qt.LeftToolBarArea, self.tool_bar())
-        self.addToolBar(qc.Qt.LeftToolBarArea, self.tool_bar())
+        self.addToolBar(qc.Qt.LeftToolBarArea, SToolBar(self))
         # self.setUnifiedTitleAndToolBarOnMac(True)
         self.app = interface
         self.db = db
@@ -62,50 +62,11 @@ class SMainWindow(qt.QMainWindow):
         self.competition = self.retrieve_competition()
         self.set_competition(self.competition.iid)
         if self.competition is None:
-            self.disable_buttons()
+            self.toolBar.buttons.disable_all()
+            # self.disable_buttons()
         # self.label.show()
 
         menubar.show()
-
-    def tool_bar(self):
-        label_text = ''
-        self.label = qt.QLabel(label_text)
-
-        button_scrutineer = qt.QPushButton('Enter &Scores')
-        button_view_scores = qt.QPushButton('&View/Print Results')
-        button_change_competition = qt.QPushButton('&Change Competition')
-        button_edit_competition = qt.QPushButton('&Edit Competition Details')
-        button_dancers = qt.QPushButton('&Add/Edit Competitors')
-        button_judges = qt.QPushButton('Add/Edit &Judges')
-        button_dancer_groups = qt.QPushButton(
-            'Define Competitor &Groups && Dances')
-        button_import = qt.QPushButton('&Import CSV')
-        button_delete = qt.QPushButton('&Delete Competition')
-        button_exit = qt.QPushButton('E&xit')
-        button_scrutineer.clicked.connect(self.enter_scores)
-        button_view_scores.clicked.connect(self.view_scores)
-        button_edit_competition.clicked.connect(self.edit_competition)
-        button_change_competition.clicked.connect(self.select_competition)
-        button_dancers.clicked.connect(self.edit_dancers)
-        button_judges.clicked.connect(self.edit_judges)
-        button_dancer_groups.clicked.connect(self.select_dancer_group)
-        button_import.clicked.connect(self.import_csv)
-        button_delete.clicked.connect(self.delete_competition)
-        button_exit.clicked.connect(self.exit_app)
-        layout = qt.QToolBar(self)
-        layout.addWidget(self.label)
-        layout.addWidget(button_scrutineer)
-        layout.addWidget(button_view_scores)
-        layout.addWidget(button_change_competition)
-        layout.addWidget(button_edit_competition)
-        layout.addWidget(button_dancers)
-        layout.addWidget(button_judges)
-        layout.addWidget(button_dancer_groups)
-        layout.addWidget(button_import)
-        layout.addWidget(button_delete)
-        layout.addWidget(button_exit)
-        layout.setOrientation(qc.Qt.Vertical)
-        return layout
 
     def enter_scores(self, sender=None):
         if self.centralWidget() is not None:
@@ -157,32 +118,6 @@ class SMainWindow(qt.QMainWindow):
         dancer_group_editor = DancerGroupEditor(self, dancer_group, self.db)
         dancer_group_editor.show()
         dancer_group_editor.exec_()
-
-    def disable_buttons(self):
-        # self.button_scrutineer.setEnabled = False
-        # self.button_edit_competition.setEnabled = False
-        # self.button_dancers.setEnabled = False
-        # self.button_judges.setEnabled = False
-        # self.button_dancer_groups.setEnabled = False
-        # self.button_import.setEnabled = False
-        # self.button_delete.setEnabled = False
-        if self.db.s.verbose:
-            print("disable_buttons")
-        for button in self.toolbar.children():
-            button.setEnabled = False
-
-    def enable_buttons(self):
-        # self.button_scrutineer.setEnabled = True
-        # self.button_edit_competition.setEnabled = True
-        # self.button_dancers.setEnabled = True
-        # self.button_judges.setEnabled = True
-        # self.button_dancer_groups.setEnabled = True
-        # self.button_import.setEnabled = True
-        # self.button_delete.setEnabled = True
-        if self.db.s.verbose:
-            print("enable_buttons")
-        for button in self.toolbar.children():
-            button.setEnabled = True
 
     def retrieve_competition(self):
         competitions = self.db.t.competition.get_all()
@@ -248,7 +183,7 @@ class SMainWindow(qt.QMainWindow):
         self.db.close_connection()
         if self.centralWidget() is not None:
             self.centralWidget().hide()
-        print(f"Exit mw {self.app}")
+        print(f"Exit mw 0")
         self.close()
         self.app.exit()
 
@@ -256,6 +191,68 @@ class SMainWindow(qt.QMainWindow):
         self.competition = self.db.t.competition.new()
         self.edit_competition()
         return self.competition
+
+
+class SToolBar(qt.QToolBar):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+        # self.buttons = STButtons(self)
+        buttons = STButtons(self)
+        label_text = ''
+        self.label = qt.QLabel(label_text)
+        self.addWidget(self.label)
+        # for button in self.buttons.buttons:
+        for button in buttons.buttons:
+            self.addWidget(button)
+        self.setOrientation(qc.Qt.Vertical)
+        self.label.show()
+        self.buttons.disable_all()
+
+
+class STButtons:
+    def __init__(self, toolbar):
+        self.toolbar = toolbar
+        scrutineer = qt.QPushButton('Enter &Scores')
+        view_scores = qt.QPushButton('&View/Print Results')
+        change_competition = qt.QPushButton('&Change Competition')
+        edit_competition = qt.QPushButton('&Edit Competition Details')
+        dancers = qt.QPushButton('&Add/Edit Competitors')
+        judges = qt.QPushButton('Add/Edit &Judges')
+        dancer_groups = qt.QPushButton(
+            'Define Competitor &Groups && Dances')
+        btn_import = qt.QPushButton('&Import CSV')
+        delete = qt.QPushButton('&Delete Competition')
+        exit = qt.QPushButton('E&xit')
+        scrutineer.clicked.connect(toolbar.parent.enter_scores)
+        view_scores.clicked.connect(toolbar.parent.view_scores)
+        edit_competition.clicked.connect(toolbar.parent.edit_competition)
+        change_competition.clicked.connect(toolbar.parent.select_competition)
+        dancers.clicked.connect(toolbar.parent.edit_dancers)
+        judges.clicked.connect(toolbar.parent.edit_judges)
+        dancer_groups.clicked.connect(toolbar.parent.select_dancer_group)
+        btn_import.clicked.connect(toolbar.parent.import_csv)
+        delete.clicked.connect(toolbar.parent.delete_competition)
+        exit.clicked.connect(toolbar.parent.exit_app)
+        self.buttons = [scrutineer, view_scores, change_competition,
+                        edit_competition, dancers, judges, dancer_groups,
+                        btn_import, delete, exit]
+
+    def enable_all(self):
+        if self.toolbar.parent.db.s.verbose:
+            print("Enable All Buttons")
+        for button in self.buttons:
+            button.setEnabled(True)
+
+    def disable_all(self):
+        if self.toolbar.parent.db.s.verbose:
+            print("Disable All Buttons")
+        for button in self.buttons:
+            button.setEnabled(False)
+
+
+
+
 
 
 class App(qt.QApplication):

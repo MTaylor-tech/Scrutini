@@ -134,11 +134,6 @@ class CompetitionSelector(qt.QDialog):
         self.setWindowModality(qc.Qt.ApplicationModal)
         self.setLayout(self.layout)
 
-    # def get_formatted_date(self, date):
-    #     format_str = '%d %b %Y'
-    #     otherformat_str = '%Y-%m-%d'
-    #     return (datetime.datetime.strftime(datetime.datetime.strptime(('%s' % date)[0:10], otherformat_str).date(), format_str))
-
     def on_button_clicked(self, identifier):
         alert = qt.QMessageBox()
         alert.setText(identifier)
