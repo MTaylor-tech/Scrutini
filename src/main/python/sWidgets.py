@@ -2,7 +2,7 @@ import os
 import csv
 import datetime
 from PyQt5.QtWidgets import QPushButton, QMessageBox
-
+from PyQt5.QtCore import QDate
 
 class SPushButton(QPushButton):
     def __init__(self, text, sender, identifier, fn):
@@ -98,7 +98,7 @@ def retrieve_csv_keys(csv_filename):
 
 def today():
     """Grab today's date."""
-    return datetime.date.today()
+    return get_formatted_date(datetime.date.today())
 
 
 def get_formatted_date(date):
@@ -107,3 +107,30 @@ def get_formatted_date(date):
     otherformat_str = '%Y-%m-%d'
     return (datetime.datetime.strftime(datetime.datetime.strptime(
         ('%s' % date)[0:10], otherformat_str).date(), format_str))
+
+
+def exit_handler(sender):
+    if sender.changes_made:
+        save_result = ask_save()
+    else:
+        save_result = 'discard'
+    # if self.db.settings.verbose:
+    #     print(f"save_result: {save_result}")
+    if save_result == 'discard':
+        sender.hide()
+    elif save_result == 'save':
+        sender.save()
+        sender.hide()
+    else:
+        pass
+
+
+def sanitize(phrase):
+    new_phrase = phrase.replace("'", "\\'")
+    new_phrase = new_phrase.replace('"', '\\"')
+    new_phrase = new_phrase.replace("--", "-")
+    print(f"Sanitize: '{phrase}' into: '{new_phrase}'")
+    # phrase.replace("'","\\'").replace('"','\\"').replace("--","-")
+    # phrase.replace("'","").replace('"','').replace("--","-")
+    # print(f"to: {phrase}")
+    return new_phrase

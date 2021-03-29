@@ -7,17 +7,16 @@ from sWidgets import is_float
 
 
 class ScoreEntryWindow(qt.QDialog):
-    def __init__(self, main_window, competition_id, db):
+    def __init__(self, main_window, db):
         super(ScoreEntryWindow, self).__init__()
         self.db = db
         self.main_window = main_window
         self.main_window.setCentralWidget(self)
-        self.competition_id = competition_id
-        self.competition = self.db.t.competition.get(competition_id)
+        self.competition = self.db.competition
         self.changes_made = False
         #self.resize(1680, 1000)
         self.layout = qt.QVBoxLayout()
-        self.events = self.db.t.event.get_by_competition(self.competition_id)
+        self.events = self.db.t.event.get_by_competition(self.competition.iid)
         self.label_event = qt.QLabel('Event')
         self.selector_event = qt.QComboBox()
         self.event_ids = []
@@ -29,7 +28,7 @@ class ScoreEntryWindow(qt.QDialog):
         self.previous_event = self.selector_event.currentIndex()
         self.selector_judge = qt.QComboBox()
         self.judge_ids = [0]
-        self.judges = self.db.t.judge.get_by_competition(self.competition_id)
+        self.judges = self.db.t.judge.get_by_competition(self.competition.iid)
         self.selector_judge.addItem('')
         for judge in self.judges:
             self.selector_judge.addItem('%s %s' % (judge.first_name,

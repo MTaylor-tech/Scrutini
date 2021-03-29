@@ -5,17 +5,18 @@ import PyQt5.QtWidgets as qt
 import PyQt5.QtCore as qc
 import PyQt5.QtGui as qg
 from fuzzywuzzy import process
-from sWidgets import SPushButton, on_button_clicked, verify, ask_save, is_float, retrieve_csv_keys, retrieve_csv_dict
+from sWidgets import SPushButton, on_button_clicked, verify, ask_save, is_float
+from sWidgets import retrieve_csv_keys, retrieve_csv_dict, sanitize
 
 
 class ImportWindow(qt.QDialog):
-    def __init__(self, main_window, competition_id, db):
+    def __init__(self, main_window, db):
         super(ImportWindow, self).__init__()
         self.db = db
         self.filename = ""
         self.main_window = main_window
         self.main_window.setCentralWidget(self)
-        self.competition = self.db.t.competition.get(competition_id)
+        self.competition = self.db.competition
         self.layout = qt.QVBoxLayout()
         self.resize(600, 800)
         self.button_choose = qt.QPushButton('Choose &File')
@@ -98,25 +99,27 @@ class ImportWindow(qt.QDialog):
                     # dancer = sc.Dancer(0,'','','','','','','','',0,'','','','','','',0,0,self.competition.iid)
                     dancer = self.db.t.dancer.new(self.competition.iid)
                     if self.column_names[0] != '':
-                        dancer.first_name = row[self.column_names[0]]
+                        dancer.first_name = sanitize(row[self.column_names[0]])
                     if self.column_names[1] != '':
-                        dancer.last_name = row[self.column_names[1]]
+                        dancer.last_name = sanitize(row[self.column_names[1]])
                     if self.column_names[2] != '':
-                        dancer.competitor_num = row[self.column_names[2]]
+                        dancer.competitor_num = sanitize(
+                            row[self.column_names[2]])
                     if self.column_names[3] != '':
-                        dancer.street = row[self.column_names[3]]
+                        dancer.street = sanitize(row[self.column_names[3]])
                     if self.column_names[4] != '':
-                        dancer.city = row[self.column_names[4]]
+                        dancer.city = sanitize(row[self.column_names[4]])
                     if self.column_names[5] != '':
-                        dancer.state = row[self.column_names[5]]
+                        dancer.state = sanitize(row[self.column_names[5]])
                     if self.column_names[6] != '':
-                        dancer.zip = row[self.column_names[6]]
+                        dancer.zip = sanitize(row[self.column_names[6]])
                     if self.column_names[7] != '':
-                        dancer.phone_num = row[self.column_names[7]]
+                        dancer.phone_num = sanitize(row[self.column_names[7]])
                     if self.column_names[8] != '':
-                        dancer.email = row[self.column_names[8]]
+                        dancer.email = sanitize(row[self.column_names[8]])
                     if self.column_names[9] != '':
-                        dancer.scot_dance_num = row[self.column_names[9]]
+                        dancer.scot_dance_num = sanitize(
+                            row[self.column_names[9]])
                     if self.column_names[10] != '':
                         cat_name, _ = process.extractOne(row[
                             self.column_names[10]], categories_names)
@@ -128,9 +131,10 @@ class ImportWindow(qt.QDialog):
                         if row[self.column_names[12]].isdigit():
                             dancer.age = int(row[self.column_names[12]])
                     if self.column_names[13] != '':
-                        dancer.teacher = row[self.column_names[13]]
+                        dancer.teacher = sanitize(row[self.column_names[13]])
                     if self.column_names[14] != '':
-                        dancer.teacher_email = row[self.column_names[14]]
+                        dancer.teacher_email = sanitize(
+                            row[self.column_names[14]])
                     if self.column_names[15] != '':
                         dancer.registered_date = row[self.column_names[15]]
                     if self.column_names[16] != '':

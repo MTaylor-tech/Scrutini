@@ -1,1 +1,1 @@
-{"name": "current", "version": 0.3, "schema": 0.3, "schema_file": "schema.sql", "db_file": "scrutini.db", "interface": 1, "last_comp": 1, "placings_order": 1, "x": {}}
+{"name": "current", "version": 0.3, "schema": 0.3, "schema_file": "schema.sql", "db_file": "scrutini.db", "interface": 1, "last_comp": 5, "placings_order": 1, "x": {}}

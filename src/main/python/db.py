@@ -13,22 +13,25 @@ class SCDatabase:
     def __init__(self, settings):
         """Access the database."""
         self.settings = settings
+        self.competition = None
         if self.settings.verbose:
             print("Connecting to DB...")
         if not os.path.exists(self.settings.db_file):
             if self.settings.verbose:
-                print("")
+                print("DB Not Found")
             self.conn = self.create_connection()
+            self.cursor = self.conn.cursor()
             self.create_schema()
             self.tables = Tables(self)
             self.t = self.tables
             # self.insert_initial_data()
         else:
             self.conn = self.create_connection()
+            self.cursor = self.conn.cursor()
             self.tables = Tables(self)
             self.t = self.tables
         self.s = self.settings
-        self.cursor = self.conn.cursor()
+        self.get_competition()
 
     def open_connection(self):
         """Open a DB connection."""
@@ -54,6 +57,24 @@ class SCDatabase:
             schema = file.read()
         self.conn.executescript(schema)
         self.conn.commit()
+
+    def get_competition(self):
+        if self.competition is not None:
+            if self.s.verbose:
+                print(f"Already Set Competition {self.competition.iid}")
+            return self.competition
+        competitions_list = self.get_all_ids("competition")
+        if self.s.verbose:
+            print(f"All competitions: {competitions_list}")
+        if self.s.last_comp in competitions_list:
+            self.competition = self.t.competition.get(self.settings.last_comp)
+            if self.s.verbose:
+                print(f"Found Competition: {self.competition.iid}")
+            return self.competition
+        else:
+            if self.s.verbose:
+                print("No competition found.")
+            return None
 
     def get_all_ids(self, table):
         """Return a list of all IDs"""
@@ -209,6 +230,21 @@ class TableCompetitions:
 
     def update(self, comp):
         """Save values for the selected Competition"""
+        # Why doesn't this vvv work?
+        # self.cursor.execute('update competition set name=%(name)s, '\
+        #                     'description=%(description)s, '\
+        #                     'event_date=%(event_date)s, '\
+        #                     'deadline=%(deadline)s, '\
+        #                     'location=%(location)s, '\
+        #                     'competition_type=%(competition_type)s '\
+        #                     'where id=%(iid)d' % {'name': comp.name,
+        #                         'description': comp.description,
+        #                         'event_date': comp.event_date,
+        #                         'deadline': comp.deadline,
+        #                         'location': comp.location,
+        #                         'competition_type': comp.competition_type,
+        #                         'iid': comp.iid
+        #                     })
         self.cursor.execute(f"update competition set name='{comp.name}',"\
                             f"description='{comp.description}',"\
                             f"event_date='{comp.event_date}',"\
@@ -222,10 +258,10 @@ class TableCompetitions:
     def remove(self, iid):
         """Delete the Competition specified by id and associated objects"""
         self.cursor.execute('delete from competition where id = %d' % int(iid))
-        self.db.tables.judges.remove_by_competition(iid)
-        self.db.tables.groups.remove_by_competition(iid)
-        self.db.tables.dancers.remove_by_competition(iid)
-        self.db.tables.events.remove_by_competition(iid)
+        self.db.tables.judge.remove_by_competition(iid)
+        self.db.tables.group.remove_by_competition(iid)
+        self.db.tables.dancer.remove_by_competition(iid)
+        self.db.tables.event.remove_by_competition(iid)
         self.conn.commit()  # Right place?
 
 

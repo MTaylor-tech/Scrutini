@@ -2,7 +2,7 @@ import classes as sc
 import PyQt5.QtWidgets as qt
 import PyQt5.QtCore as qc
 import PyQt5.QtGui as qg
-from sWidgets import SPushButton, verify, ask_save
+from sWidgets import SPushButton, verify, ask_save, sanitize
 
 
 class GroupEditor(qt.QDialog):
@@ -183,8 +183,8 @@ class GroupEditor(qt.QDialog):
 
     def save_button(self, sender=None):
         self.setFocus()
-        self.dancer_group.name = self.field_name.text()
-        self.dancer_group.abbrev = self.field_abbrev.text()
+        self.dancer_group.name = sanitize(self.field_name.text())
+        self.dancer_group.abbrev = sanitize(self.field_abbrev.text())
         if (self.field_age_min.text().isdigit()):
             self.dancer_group.age_min = int(self.field_age_min.text())
         if (self.field_age_max.text().isdigit()):

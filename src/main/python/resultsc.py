@@ -113,15 +113,15 @@ class ResultsGroupBox(qt.QGroupBox):
 
 
 class ResultsViewWindow(qt.QDialog):
-    def __init__(self, main_window, competition_id, db):
+    def __init__(self, main_window, db):
         super(ResultsViewWindow, self).__init__()
         self.db = db
         self.main_window = main_window
         self.main_window.setCentralWidget(self)
-        self.competition_id = competition_id
-        self.competition = self.db.t.competition.get(self.competition_id)
+        self.competition = self.db.competition
         self.layout = qt.QVBoxLayout()
-        self.dancer_groups = self.db.t.group.get_by_competition(self.competition_id)
+        self.dancer_groups = self.db.t.group.get_by_competition(
+            self.competition.iid)
         self.big_layout = qt.QVBoxLayout()
         self.big_group_box = qt.QGroupBox()
         self.label_group = qt.QLabel('Viewing results for group:')

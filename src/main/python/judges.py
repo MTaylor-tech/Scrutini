@@ -2,18 +2,18 @@ import classes as sc
 import PyQt5.QtWidgets as qt
 import PyQt5.QtCore as qc
 import PyQt5.QtGui as qg
-from sWidgets import verify, ask_save
+from sWidgets import verify, ask_save, sanitize
 
 
 class JudgeSelector(qt.QDialog):
-    def __init__(self, main_window, competition_id, db):
+    def __init__(self, main_window, db):
         super(JudgeSelector, self).__init__()
         self.db = db
         if self.db.s.verbose:
             print("JudgeSelector in judges.py")
         self.main_window = main_window
         self.main_window.setCentralWidget(self)
-        self.competition_id = competition_id
+        self.competition_id = self.db.competition.iid
         self.changes_made = False
         self.layout = qt.QVBoxLayout()
         self.judges = self.db.t.judge.get_by_competition(competition_id)
@@ -49,9 +49,9 @@ class JudgeSelector(qt.QDialog):
         self.save_btn = qt.QPushButton('&Save')
         self.save_btn.clicked.connect(self.save_button)
         self.layout.addWidget(self.save_btn)
-        self.exit_button = qt.QPushButton('E&xit')
-        self.exit_button.clicked.connect(self.exit_button)
-        self.layout.addWidget(self.exit_button)
+        self.exit_btn = qt.QPushButton('E&xit')
+        self.exit_btn.clicked.connect(self.exit_button)
+        self.layout.addWidget(self.exit_btn)
         self.setWindowModality(qc.Qt.ApplicationModal)
         self.setLayout(self.layout)
 
@@ -97,8 +97,8 @@ class JudgeSelector(qt.QDialog):
         while row < self.table_judges.rowCount():
             judge_id = int(self.table_judges.item(row, 2).text())
             judge = self.db.t.judge.get(judge_id)
-            judge.first_name = self.table_judges.item(row, 0).text()
-            judge.last_name = self.table_judges.item(row, 1).text()
+            judge.first_name = sanitize(self.table_judges.item(row, 0).text())
+            judge.last_name = sanitize(self.table_judges.item(row, 1).text())
             if self.db.s.verbose:
                 print('Saving judge %s %s [%d] to competition %d(%d)' %
                       (judge.first_name, judge.last_name, judge.iid,

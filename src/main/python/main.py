@@ -1,11 +1,19 @@
 """Scrutini Main."""
 import argparse
 import os
+import sys
 import gui
 from db import SCDatabase
 from classes import Settings
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
+
+class AppContext(ApplicationContext):
+    def run(self, db):
+        window = gui.SMainWindow(self, db)
+        # version = self.build_settings['version']
+        window.show()
+        return self.app.exec_()
 
 # initiate the parser
 parser = argparse.ArgumentParser()
@@ -41,14 +49,15 @@ else:
     SETTINGS_FILE = 'config.json'
 
 if __name__ == "__main__":
-    appctxt = ApplicationContext()
-    import sys
+    # appctxt = ApplicationContext()
     settings = Settings(SETTINGS_FILE, VERBOSE)
     if args.database and os.path.exists(args.database):
         settings.db_file = args.database
     if VERBOSE:
         print(settings)
     scrudb = SCDatabase(settings)
+    appctxt = AppContext()
+    rc = appctxt.run(scrudb)
     # if INTERFACE == 0:
     #     print("Command Line Interface not available in this version.")
     #     # scruinterface.print_settings()
@@ -56,9 +65,13 @@ if __name__ == "__main__":
     # else:
     # import pdb
     # pdb.set_trace()
-    g = gui.App(scrudb)
-    g.start()
-    rc = appctxt.app.exec_()
+    # g = gui.App(scrudb)
+    # g.start()
+    # window = gui.SMainWindow(None, scrudb)
+    # window.show()
+    # rc = 0
+    # rc = appctxt.app.exec_()
+    # rc = appctxt.app.exec()
     # del appctxt.app
     settings.write()
     if VERBOSE:

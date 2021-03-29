@@ -3,30 +3,28 @@ import classes as sc
 import PyQt5.QtWidgets as qt
 import PyQt5.QtCore as qc
 import PyQt5.QtGui as qg
-from sWidgets import SPushButton, get_formatted_date, ask_save
+from sWidgets import SPushButton, get_formatted_date, ask_save, sanitize
 import pdb
 
 
 class CompetitionEditor(qt.QDialog):
-    def __init__(self, main_window, competition_id, db):
+    def __init__(self, main_window, db):
         super().__init__()
         self.db = db
         v = self.db.settings.verbose
-        if self.db.settings.verbose:
-            print("CompetitionEditor in competitions.py")
         self.main_window = main_window
         self.main_window.setCentralWidget(self)
-        self.competition = self.db.t.competition.get(competition_id)
+        # self.db.competition = self.db.t.competition.get(competition_id)
         self.changes_made = False
         self.layout = qt.QVBoxLayout()
         self.label_name = qt.QLabel('Name:')
-        self.field_name = qt.QLineEdit(self.competition.name)
+        self.field_name = qt.QLineEdit(self.db.competition.name)
         self.label_location = qt.QLabel('Location:')
-        self.field_location = qt.QLineEdit(self.competition.location)
+        self.field_location = qt.QLineEdit(self.db.competition.location)
         self.date_competition_event = qc.QDate.fromString(
-            self.competition.event_date, 'yyyy-MM-dd 00:00:00')
+            self.db.competition.event_date, 'yyyy-MM-dd 00:00:00')
         self.date_competition_deadline = qc.QDate.fromString(
-            self.competition.deadline, 'yyyy-MM-dd 00:00:00')
+            self.db.competition.deadline, 'yyyy-MM-dd 00:00:00')
         self.label_competition_event_date = qt.QLabel('Event date:')
         self.calendar_competition_event = qt.QCalendarWidget()
         self.calendar_competition_event.setSelectedDate(
@@ -40,7 +38,7 @@ class CompetitionEditor(qt.QDialog):
         for competition_type in competition_types:
             self.selector_competition_type.addItem(competition_type.name)
         self.selector_competition_type.setCurrentIndex(
-            self.competition.competition_type)
+            self.db.competition.competition_type)
         self.field_name.textChanged.connect(self.item_changed)
         self.field_location.textChanged.connect(self.item_changed)
         self.selector_competition_type.currentIndexChanged.connect(
@@ -71,17 +69,17 @@ class CompetitionEditor(qt.QDialog):
         self.field_name.setFocus()
 
     def save(self):
-        self.competition.name = self.field_name.text()
-        self.competition.location = self.field_location.text()
-        self.competition.event_date = (self.calendar_competition_event
+        self.db.competition.name = sanitize(self.field_name.text())
+        self.db.competition.location = sanitize(self.field_location.text())
+        self.db.competition.event_date = (self.calendar_competition_event
                             .selectedDate().toString('yyyy-MM-dd 00:00:00'))
-        self.competition.deadline = (self.calendar_competition_deadline
+        self.db.competition.deadline = (self.calendar_competition_deadline
                             .selectedDate().toString('yyyy-MM-dd 00:00:00'))
-        self.competition.competition_type = (self
+        self.db.competition.competition_type = (self
                                              .selector_competition_type
                                              .currentIndex())
-        self.db.t.competition.update(self.competition)
-        self.main_window.set_competition(self.competition.iid)
+        self.db.t.competition.update(self.db.competition)
+        self.main_window.set_competition()
         self.changes_made = False
         self.hide()
 
@@ -105,14 +103,18 @@ class CompetitionEditor(qt.QDialog):
 
 
 class CompetitionSelector(qt.QDialog):
-    def __init__(self, main_window):
+    def __init__(self, main_window, db):
         super(CompetitionSelector, self).__init__()
         self.main_window = main_window
-        if self.main_window.db.settings.verbose:
+        self.db = db
+        if self.db.settings.verbose:
             print("CompetitionSelector in competitions.py")
         self.layout = qt.QVBoxLayout()
         self.layout.addWidget(qt.QLabel('Choose a competition:'))
-        self.competitions = self.main_window.db.t.competition.get_all()
+        self.competitions = self.db.t.competition.get_all()
+        ccid = -1
+        if self.db.get_competition() is not None:
+            ccid = self.db.competition.iid
         self.competition_buttons = []
         for competition in self.competitions:
             competition_button = SPushButton('%s (%s)' % (competition.name,
@@ -120,6 +122,10 @@ class CompetitionSelector(qt.QDialog):
                                          competition.event_date)),
                                      self, competition.iid,
                                      self.set_competition)
+            if ccid == competition.iid:
+                competition_button.setFocus(True)
+            else:
+                competition_button.setFocus(False)
             competition_button.clicked.connect(
                 competition_button.on_button_clicked)
             self.competition_buttons.append(competition_button)
@@ -140,7 +146,8 @@ class CompetitionSelector(qt.QDialog):
         alert.exec_()
 
     def set_competition(self, competition_id):
-        self.main_window.set_competition(competition_id)
+        self.db.competition = self.db.t.competition.get(competition_id)
+        self.main_window.set_competition()
         self.hide()
 
     def new_competition(self):

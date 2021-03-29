@@ -2,15 +2,15 @@ import classes as sc
 import PyQt5.QtWidgets as qt
 import PyQt5.QtCore as qc
 import PyQt5.QtGui as qg
-from sWidgets import verify, ask_save
+from sWidgets import verify, ask_save, sanitize
 
 class DancerEditor(qt.QDialog):
-    def __init__(self, main_window, competition_id, db):
+    def __init__(self, main_window, db):
         super(DancerEditor, self).__init__()
         self.main_window = main_window
         self.main_window.setCentralWidget(self)
-        self.competition_id = competition_id
         self.db = db
+        self.competition_id = self.db.competition.iid
         self.changes_made = False
         self.resize(1680, 1000)
         self.layout = qt.QVBoxLayout()
@@ -124,9 +124,9 @@ class DancerEditor(qt.QDialog):
             save_result = 'discard'
         if self.db.settings.verbose:
             print(save_result)
-        if saveResult == 'discard':
+        if save_result == 'discard':
             self.hide()
-        elif saveResult == 'save':
+        elif save_result == 'save':
             self.save_button()
             self.hide()
         else:
@@ -225,23 +225,26 @@ class DancerEditor(qt.QDialog):
         while row < self.table_dancers.rowCount():
             dancer_id = int(self.table_dancers.item(row, 17).text())
             dancer = self.db.t.dancer.get(dancer_id)
-            dancer.first_name = self.table_dancers.item(row, 0).text()
-            dancer.last_name = self.table_dancers.item(row, 1).text()
-            dancer.competitor_num = self.table_dancers.item(row, 2).text()
-            dancer.scot_dance_num = self.table_dancers.item(row, 5).text()
-            dancer.street = self.table_dancers.item(row, 6).text()
-            dancer.city = self.table_dancers.item(row, 7).text()
-            dancer.state = self.table_dancers.item(row, 8).text()
-            dancer.zip = self.table_dancers.item(row, 9).text()
+            dancer.first_name = sanitize(self.table_dancers.item(row, 0).text())
+            dancer.last_name = sanitize(self.table_dancers.item(row, 1).text())
+            dancer.competitor_num = sanitize(
+                self.table_dancers.item(row, 2).text())
+            dancer.scot_dance_num = sanitize(
+                self.table_dancers.item(row, 5).text())
+            dancer.street = sanitize(self.table_dancers.item(row, 6).text())
+            dancer.city = sanitize(self.table_dancers.item(row, 7).text())
+            dancer.state = sanitize(self.table_dancers.item(row, 8).text())
+            dancer.zip = sanitize(self.table_dancers.item(row, 9).text())
             dancer.birthdate = self.table_dancers.item(row, 10).text()
             dancer_age = self.table_dancers.item(row, 11).text()
             if dancer_age.isdigit():
                 dancer.age = int(dancer_age)
             dancer.registered_date = self.table_dancers.item(row, 12).text()
-            dancer.phone_num = self.table_dancers.item(row, 13).text()
-            dancer.email = self.table_dancers.item(row, 14).text()
-            dancer.teacher = self.table_dancers.item(row, 15).text()
-            dancer.teacher_email = self.table_dancers.item(row, 16).text()
+            dancer.phone_num = sanitize(self.table_dancers.item(row, 13).text())
+            dancer.email = sanitize(self.table_dancers.item(row, 14).text())
+            dancer.teacher = sanitize(self.table_dancers.item(row, 15).text())
+            dancer.teacher_email = sanitize(
+                self.table_dancers.item(row, 16).text())
             selector_category = self.table_dancers.cellWidget(row, 3)
             if selector_category.currentIndex() > 0:
                 dancer.dancer_category = selector_category.currentIndex()
