@@ -209,14 +209,14 @@ class GroupEditor(qt.QDialog):
             if checkbox_in_group.checkState() == 0 and (dancer_id in
                                                         self.dancer_ids):
                 if self.db.s.verbose:
-                    print('dancer [%s] in row %d is in group but should be '\
-                          'removed' % (dancer_id_text, row))
+                    print('dancer [%d] in row %d is in group %d but should be '\
+                          'removed' % (dancer_id, row, self.dancer_group.iid))
                 self.db.t.group.unjoin(dancer_id, self.dancer_group.iid)
             elif checkbox_in_group.checkState() == 2 and (dancer_id not in
                                                           self.dancer_ids):
                 if self.db.s.verbose:
-                    print('dancer [%s] in row %d is not in group but should '\
-                          'be added' % (dancer_id_text, row))
+                    print('dancer [%d] in row %d is not in group %d but should '\
+                          'be added' % (dancer_id, row, self.dancer_group.iid))
                 self.db.t.group.join(dancer_id, self.dancer_group.iid)
             row += 1
         row = 0
@@ -343,15 +343,16 @@ class GroupEditor(qt.QDialog):
 
 
 class GroupMenu(qt.QDialog):
-    def __init__(self, main_window, competition_id, db):
+    def __init__(self, main_window, db):
         super().__init__()
         self.db = db
         self.main_window = main_window
         self.main_window.setCentralWidget(self)
-        self.competition_id = competition_id
+        self.competition_id = self.db.competition.iid
         self.layout = qt.QVBoxLayout()
         self.layout.addWidget(qt.QLabel('Choose a Competitor Group:'))
-        self.dancer_groups = self.db.t.group.get_by_competition(competition_id)
+        self.dancer_groups = self.db.t.group.get_by_competition(
+            self.competition_id)
         self.dg_buttons = []
         cats = self.db.t.category.get_all()
         for dancer_group in self.dancer_groups:

@@ -14,7 +14,7 @@ class DancerEditor(qt.QDialog):
         self.changes_made = False
         self.resize(1680, 1000)
         self.layout = qt.QVBoxLayout()
-        self.dancers = self.db.t.dancer.get_by_competition(competition_id)
+        self.dancers = self.db.t.dancer.get_by_competition(self.competition_id)
         self.table_dancers = qt.QTableWidget()
         self.headers = ['First Name', 'Last Name', 'Num', 'Category',
                         'Groups', 'ScotDance#', 'Address', 'City', 'ST',

@@ -252,7 +252,7 @@ class STButtons(qt.QWidget):
         dancers.clicked.connect(lambda: toolbar.parent.press(DancerEditor))
         judges.clicked.connect(lambda: toolbar.parent.press(JudgeSelector))
         dancer_groups.clicked.connect(
-            lambda: toolbar.parent.press(DanceGroupMenu))
+            lambda: toolbar.parent.press(DancerGroupMenu))
         btn_import.clicked.connect(lambda: toolbar.parent.press(ImportWindow))
         delete.clicked.connect(toolbar.parent.delete_competition)
         exit.clicked.connect(toolbar.parent.exit_app)

@@ -449,10 +449,13 @@ class TableGroups:
             self.remove(group.iid)
 
     def join(self, dancer_id, group_id):
-        if not self.dancer_in_group(dancer_id, group_id):
-            self.cursor.execute('insert into dancer_dancer_group (dancer, dancer_group)\
-                                values(%d, %d)' % (dancer_id, group_id))
-            self.conn.commit()
+        # if not self.dancer_in_group(dancer_id, group_id):
+        sql = 'insert into dancer_dancer_group (dancer, dancer_group) values(%(did)d, %(gid)d)' % {'did': dancer_id, 'gid': group_id}
+        # self.cursor.execute('insert into dancer_dancer_group (dancer, dancer_group)\
+        #                     values(%d, %d)' % (dancer_id, group_id))
+        print(sql)
+        self.cursor.execute(sql)
+        self.conn.commit()
 
     def unjoin(self, dancer_id, group_id):
         """Remove the connection between Dancer and DancerGroup"""

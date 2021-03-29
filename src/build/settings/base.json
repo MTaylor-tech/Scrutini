@@ -2,5 +2,5 @@
     "app_name": "Scrutini",
     "author": "Matthew Taylor",
     "main_module": "src/main/python/main.py",
-    "version": "0.0.0"
+    "version": "0.4"
 }

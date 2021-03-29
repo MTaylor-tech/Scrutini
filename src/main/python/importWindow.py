@@ -25,6 +25,7 @@ class ImportWindow(qt.QDialog):
         self.table_columns = qt.QTableWidget()
         self.button_import = qt.QPushButton('&Import')
         self.button_import.clicked.connect(self.import_file)
+        self.button_import.setEnabled(False)
         self.button_exit = qt.QPushButton('Cancel')
         self.button_exit.clicked.connect(self.hide)
         self.table_columns.setColumnCount(2)
@@ -73,6 +74,7 @@ class ImportWindow(qt.QDialog):
             return
         self.label_filename.setText(self.filename)
         self.reader = retrieve_csv_keys(self.filename)
+        self.button_import.setEnabled(True)
         row = 0
         while row < self.table_columns.rowCount():
             selector_column = self.table_columns.cellWidget(row, 1)

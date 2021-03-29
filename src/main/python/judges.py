@@ -16,7 +16,7 @@ class JudgeSelector(qt.QDialog):
         self.competition_id = self.db.competition.iid
         self.changes_made = False
         self.layout = qt.QVBoxLayout()
-        self.judges = self.db.t.judge.get_by_competition(competition_id)
+        self.judges = self.db.t.judge.get_by_competition(self.competition_id)
         self.table_judges = qt.QTableWidget()
         self.headers = ['First Name', 'Last Name', 'id']
         self.table_judges.setColumnCount(len(self.headers))
